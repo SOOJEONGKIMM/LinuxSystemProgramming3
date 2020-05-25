@@ -140,7 +140,7 @@ int do_addOpt(char *str) {
 		a++;
 		i++;
 	}
-	printf("min:%s\n",min);
+	//	printf("min:%s\n",min);
 	if(strlen(min)==0){
 		printf("no run cycle input\n");
 		gettimeofday(&end_t, NULL);
@@ -157,7 +157,7 @@ int do_addOpt(char *str) {
 		a++;
 		i++;
 	}
-	printf("hour:%s\n",hour);
+	//	printf("hour:%s\n",hour);
 	//day
 	i=j;
 	while(i<len && str[i]==' ')
@@ -168,7 +168,7 @@ int do_addOpt(char *str) {
 		a++;
 		i++;
 	}
-	printf("day:%s\n",day);
+	//	printf("day:%s\n",day);
 	//month
 	i=j;
 	while(i<len && str[i]==' ')
@@ -179,7 +179,7 @@ int do_addOpt(char *str) {
 		a++;
 		i++;
 	}
-	printf("month:%s\n",month);
+	//	printf("month:%s\n",month);
 	//weekday
 	i=j;
 	while(i<len && str[i]==' ')
@@ -190,9 +190,191 @@ int do_addOpt(char *str) {
 		a++;
 		i++;
 	}
-	printf("weekday:%s\n",weekday);
+	//	printf("weekday:%s\n",weekday);
 
 	//실행주기 예외처리:*-,/이외의 기호인 경우, 항목이5개아닌경우,각항목이 범위를 벗어난 경우,  주기'/'숫자 형태가 아닌 경우 
+
+	if(strlen(min)==0||strlen(hour)==0||strlen(day)==0||strlen(month)==0||strlen(weekday)==0){
+		printf("run cycle number is not five\n");
+		gettimeofday(&end_t, NULL);
+		ssu_runtime(&begin_t, &end_t);
+		printf("\n");
+		return 0;
+	}
+	//min 예외처리 
+	int z=0;
+	for(z=0;z<strlen(min);z++){
+		if(((0x30<min[z])&&(min[z]<0x39))||min[z]==0x2A||min[z]==0x2D||min[z]==0x2C||min[z]==0x2F)
+			printf("good input\n");
+		else{
+			printf("run cycle input is wrong\n");
+			gettimeofday(&end_t, NULL);
+			ssu_runtime(&begin_t, &end_t);
+			printf("\n");
+			return 0;
+		}
+	}
+	//주기'/'숫자 형태가 아닌 경우 
+	for(z=0;z<strlen(min);z++){
+		if(min[z]==0x2F){
+			if((0x30>min[z+1])||(min[z+1]>0x39)){
+				printf("run cycle input is wrong\n");
+				gettimeofday(&end_t, NULL);
+				ssu_runtime(&begin_t, &end_t);
+				printf("\n");
+				return 0;
+			}
+		}
+	}
+	//범위를 벗어난 경우
+	int minint=atoi(min);
+	printf("minint:%d\n",minint);
+	if(minint<0||minint>59){
+		printf("runcycle range is wrong\n");
+		gettimeofday(&end_t, NULL);
+		ssu_runtime(&begin_t, &end_t);
+		printf("\n");
+		return 0;
+	}
+
+
+	//hour 예외처리 
+	for(z=0;z<strlen(hour);z++){
+		if(((0x30<hour[z])&&(hour[z]<0x39))||hour[z]==0x2A||hour[z]==0x2D||hour[z]==0x2C||hour[z]==0x2F)
+			printf("good input\n");
+		else{
+			printf("run cycle input is wrong\n");
+			gettimeofday(&end_t, NULL);
+			ssu_runtime(&begin_t, &end_t);
+			printf("\n");
+			return 0;
+		}
+	}
+	//주기'/'숫자 형태가 아닌 경우 
+	for(z=0;z<strlen(hour);z++){
+		if(hour[z]==0x2F){
+			if((0x30>hour[z+1])||(hour[z+1]>0x39)){
+				printf("run cycle input is wrong\n");
+				gettimeofday(&end_t, NULL);
+				ssu_runtime(&begin_t, &end_t);
+				printf("\n");
+				return 0;
+			}
+		}
+	}
+	//범위를 벗어난 경우
+	int hourint=atoi(hour);
+	printf("hourint:%d\n",hourint);
+	if(hourint<0||hourint>23){
+		printf("runcycle range is wrong\n");
+		gettimeofday(&end_t, NULL);
+		ssu_runtime(&begin_t, &end_t);
+		printf("\n");
+		return 0;
+	}
+	//day 예외처리 
+	for(z=0;z<strlen(day);z++){
+		if(((0x30<day[z])&&(day[z]<0x39))||day[z]==0x2A||day[z]==0x2D||day[z]==0x2C||day[z]==0x2F)
+			printf("good input\n");
+		else{
+			printf("run cycle input is wrong\n");
+			gettimeofday(&end_t, NULL);
+			ssu_runtime(&begin_t, &end_t);
+			printf("\n");
+			return 0;
+		}
+	}
+	//주기'/'숫자 형태가 아닌 경우 
+	for(z=0;z<strlen(day);z++){
+		if(day[z]==0x2F){
+			if((0x30>day[z+1])||(day[z+1]>0x39)){
+				printf("run cycle input is wrong\n");
+				gettimeofday(&end_t, NULL);
+				ssu_runtime(&begin_t, &end_t);
+				printf("\n");
+				return 0;
+			}
+		}
+	}
+	//범위를 벗어난 경우
+	int dayint=atoi(day);
+	printf("dayint:%d\n",dayint);
+	if(dayint<0||dayint>31){
+		printf("runcycle range is wrong\n");
+		gettimeofday(&end_t, NULL);
+		ssu_runtime(&begin_t, &end_t);
+		printf("\n");
+		return 0;
+	}
+	//month 예외처리 
+	for(z=0;z<strlen(month);z++){
+		if(((0x30<month[z])&&(month[z]<0x39))||month[z]==0x2A||month[z]==0x2D||month[z]==0x2C||month[z]==0x2F)
+			printf("good input\n");
+		else{
+			printf("run cycle input is wrong\n");
+			gettimeofday(&end_t, NULL);
+			ssu_runtime(&begin_t, &end_t);
+			printf("\n");
+			return 0;
+		}
+	}
+	//주기'/'숫자 형태가 아닌 경우 
+	for(z=0;z<strlen(month);z++){
+		if(month[z]==0x2F){
+			if((0x30>month[z+1])||(month[z+1]>0x39)){
+				printf("run cycle input is wrong\n");
+				gettimeofday(&end_t, NULL);
+				ssu_runtime(&begin_t, &end_t);
+				printf("\n");
+				return 0;
+			}
+		}
+	}
+	//범위를 벗어난 경우
+	int monthint=atoi(month);
+	printf("monthint:%d\n",monthint);
+	if(monthint<0||monthint>12){
+		printf("runcycle range is wrong\n");
+		gettimeofday(&end_t, NULL);
+		ssu_runtime(&begin_t, &end_t);
+		printf("\n");
+		return 0;
+	}
+	//weekday 예외처리 
+	for(z=0;z<strlen(weekday);z++){
+		if(((0x30<weekday[z])&&(weekday[z]<0x39))||weekday[z]==0x2A||weekday[z]==0x2D||weekday[z]==0x2C||weekday[z]==0x2F)
+			printf("good input\n");
+		else{
+			printf("run cycle input is wrong\n");
+			gettimeofday(&end_t, NULL);
+			ssu_runtime(&begin_t, &end_t);
+			printf("\n");
+			return 0;
+		}
+	}
+	//주기'/'숫자 형태가 아닌 경우 
+	for(z=0;z<strlen(weekday);z++){
+		if(weekday[z]==0x2F){
+			if((0x30>weekday[z+1])||(weekday[z+1]>0x39)){
+				printf("run cycle input is wrong\n");
+				gettimeofday(&end_t, NULL);
+				ssu_runtime(&begin_t, &end_t);
+				printf("\n");
+				return 0;
+			}
+		}
+	}
+	//범위를 벗어난 경우
+	int weekint=atoi(weekday);
+	printf("weekint:%d\n",weekint);
+	if(weekint<0||weekint>6){
+		printf("runcycle range is wrong\n");
+		gettimeofday(&end_t, NULL);
+		ssu_runtime(&begin_t, &end_t);
+		printf("\n");
+		return 0;
+	}
+
 
 	//명령어 입력 '\n' 개행만날때까지 _명령어는 예외처리 안해도됨 
 	i=j;
@@ -204,7 +386,15 @@ int do_addOpt(char *str) {
 		a++;
 		i++;
 	}
-	printf("syscmd:%s\n",syscmd);
+	if(strlen(syscmd)==0){
+		printf("no syscmd input\n");
+		gettimeofday(&end_t, NULL);
+		ssu_runtime(&begin_t, &end_t);
+		printf("\n");
+		return 0;
+	}
+
+	//	printf("syscmd:%s\n",syscmd);
 	//ssu_crontab_file에 파일입출력 
 	FILE *fp;
 	char *cronfile="ssu_crontab_file";
@@ -235,11 +425,10 @@ int do_addOpt(char *str) {
 		}
 		fclose(fp);
 	}
-	printf("\n");
-
 
 	gettimeofday(&end_t, NULL);
 	ssu_runtime(&begin_t, &end_t);
+	printf("\n");
 
 	return 0;
 }
@@ -265,7 +454,6 @@ int do_removeOpt(char *str) {
 		a++;
 		i++;
 	}
-	printf("cmdnum:%s\n",cmdnum);
 	//COMMAND_NUMBER 입력하지않은 경우 예외처리 후 프롬프트로 제어가 넘어감 
 	if(strlen(cmdnum)==0){
 		printf("no COMMAND_NUMBER input\n");
@@ -280,50 +468,60 @@ int do_removeOpt(char *str) {
 	long seek, start;
 	FILE *fp;
 	char *cronfile="ssu_crontab_file";
+	int removed=0;
 
 	if(access(cronfile,F_OK)==0){
 		if((fp=fopen(cronfile,"rt+"))<0){
 			fprintf(stderr,"fopen error\n");
 		}
-		printf("before remove:");
-		while(fgets(cronbuf,BUFFER_SIZE,fp)!=NULL)printf("%s",cronbuf);
+		//printf("before remove:");
+		while(fgets(cronbuf,BUFFER_SIZE,fp)!=NULL);//printf("%s",cronbuf);
 		long allbyte=ftell(fp);
-		printf("allbyte=%ld\n",allbyte);
 
 		rewind(fp);
 		while(1){
 			seek=ftell(fp);
-			printf("seek:%ld\n",seek);
 			if(fgets(cronbuf,BUFFER_SIZE,fp)==NULL) break;
 
 			if(index==cmdnumint){
 				start=seek;
-			printf("start:%ld\n",start);
 				long len=allbyte-start;
-				printf("len1:%ld\n",len);
 				char *tmp=(char*)malloc(len);
 				len=fread(tmp,1,len,fp);
-				printf("len2:%ld\n",len);
 
 				fseek(fp,start,SEEK_SET);
 				fwrite(tmp,1,len,fp);
 				fflush(fp);
 				free(tmp);
 				truncate(cronfile,ftell(fp));
+				removed=1;
 				break;
 			}
 			index++;
 		}
+		if(!removed){
+			printf("COMMAND_NUMBER doesn't exist\n");
+			gettimeofday(&end_t, NULL);
+			ssu_runtime(&begin_t, &end_t);
+			return 0;
+		}
+		memset(cronbuf,0,BUFFER_SIZE);
+		rewind(fp);
+		index=0;
+		while(1){
+			fgets(cronbuf,BUFFER_SIZE,fp);
+			if(feof(fp))
+				break;
+			printf("%d. %s",index,cronbuf);
+			index++;
 			memset(cronbuf,0,BUFFER_SIZE);
-			rewind(fp);
-			printf("after remove:");
-			while(fgets(cronbuf,BUFFER_SIZE,fp)!=NULL)printf("%s",cronbuf);
+		}
 		fclose(fp);
 	}
 
-//			printf("%d. %s",index,cronbuf);
 	gettimeofday(&end_t, NULL);
 	ssu_runtime(&begin_t, &end_t);
+	printf("\n");
 
 	return 0;
 }
