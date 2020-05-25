@@ -193,6 +193,7 @@ int do_addOpt(char *str) {
 	printf("weekday:%s\n",weekday);
 
 	//실행주기 예외처리:*-,/이외의 기호인 경우, 항목이5개아닌경우,각항목이 범위를 벗어난 경우,  주기'/'숫자 형태가 아닌 경우 
+
 	//명령어 입력 '\n' 개행만날때까지 _명령어는 예외처리 안해도됨 
 	i=j;
 	while(i<len && str[i]==' ')
@@ -244,9 +245,83 @@ int do_addOpt(char *str) {
 }
 int do_removeOpt(char *str) {
 	gettimeofday(&begin_t, NULL);
+	//trim "add" cmd part
+	int i;
+	int len=strlen(str);
+	for(i=0;strlen(str);i++){
+		if(str[i]==' ')
+			break;
+	}
+	while(i<len && str[i]==' ')
+		i++;
 
-	printf("remove opt\n");
+	//COMMAND_NUMBER 입력 
+	char cmdnum[TIME_SIZE];
+	memset(cmdnum,0,TIME_SIZE);
+	int a=0;
+	int j;
+	for(j=i;j<len && str[j]!=' ';j++){
+		cmdnum[a]=str[j];
+		a++;
+		i++;
+	}
+	printf("cmdnum:%s\n",cmdnum);
+	//COMMAND_NUMBER 입력하지않은 경우 예외처리 후 프롬프트로 제어가 넘어감 
+	if(strlen(cmdnum)==0){
+		printf("no COMMAND_NUMBER input\n");
+		gettimeofday(&end_t, NULL);
+		ssu_runtime(&begin_t, &end_t);
+		return 0;
+	}
+	int cmdnumint=atoi(cmdnum);
 
+	int index=0;
+	char cronbuf[BUFFER_SIZE];
+	long seek, start;
+	FILE *fp;
+	char *cronfile="ssu_crontab_file";
+
+	if(access(cronfile,F_OK)==0){
+		if((fp=fopen(cronfile,"rt+"))<0){
+			fprintf(stderr,"fopen error\n");
+		}
+		printf("before remove:");
+		while(fgets(cronbuf,BUFFER_SIZE,fp)!=NULL)printf("%s",cronbuf);
+		long allbyte=ftell(fp);
+		printf("allbyte=%ld\n",allbyte);
+
+		rewind(fp);
+		while(1){
+			seek=ftell(fp);
+			printf("seek:%ld\n",seek);
+			if(fgets(cronbuf,BUFFER_SIZE,fp)==NULL) break;
+
+			if(index==cmdnumint){
+				start=seek;
+			printf("start:%ld\n",start);
+				long len=allbyte-start;
+				printf("len1:%ld\n",len);
+				char *tmp=(char*)malloc(len);
+				len=fread(tmp,1,len,fp);
+				printf("len2:%ld\n",len);
+
+				fseek(fp,start,SEEK_SET);
+				fwrite(tmp,1,len,fp);
+				fflush(fp);
+				free(tmp);
+				truncate(cronfile,ftell(fp));
+				break;
+			}
+			index++;
+		}
+			memset(cronbuf,0,BUFFER_SIZE);
+			rewind(fp);
+			printf("after remove:");
+			while(fgets(cronbuf,BUFFER_SIZE,fp)!=NULL)printf("%s",cronbuf);
+		fclose(fp);
+	}
+
+//			printf("%d. %s",index,cronbuf);
 	gettimeofday(&end_t, NULL);
 	ssu_runtime(&begin_t, &end_t);
 
