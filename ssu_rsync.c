@@ -57,9 +57,7 @@ int main(int argc, char *argv[]){
 	char onlysrcfname[PATH_SIZE];
 	memset(onlysrcfname,0,PATH_SIZE);
 	char *tmp=strrchr(src,'/');
-	printf("tmp:%s\n",tmp);
-parsechar(tmp,onlysrcfname,"/");
-	printf("onlysrcf:%s\n",onlysrcfname);
+	parsechar(tmp,onlysrcfname,"/");
 
 	//src mtime, size 
 	int srcmtime=0;
@@ -89,14 +87,28 @@ parsechar(tmp,onlysrcfname,"/");
 
 	int samefile=0;
 	int samename=0;
-	if(list_samefilesearch(src,srcmtime, srcfsize))
+	int nofile=0;
+	if(!list_samefilesearch(onlysrcfname,srcmtime, srcfsize)&&!list_samenamesearch(onlysrcfname))
+		nofile=1;
+	if(list_samefilesearch(onlysrcfname,srcmtime, srcfsize))
 		samefile=1;
-	if(!list_samefilesearch(src,srcmtime, srcfsize)&&list_samenamesearch(onlysrcfname))
+	if(!list_samefilesearch(onlysrcfname,srcmtime, srcfsize)&&list_samenamesearch(onlysrcfname))
 		samename=1;
-	printf("same file:%d, name:%d",samefile,samename);
+	printf("no:%d same file:%d, name:%d",nofile,samefile,samename);
 	//[OPTION]없는 경우 
 	if(strlen(option)==0){
-		printf("no option\n");
+		if(nofile){
+			if(file_src)
+				rsync_copyF(src,onlysrcfname);
+			else if(dir_src)
+				rsync_copyD(src,onlysrcfname);
+		}
+		else if(samename){
+			if(file_src)
+				rsync_replaceF(src, onlysrcfname);
+			else if(dir_src)
+				rsync_replaceD(src, onlysrcfname);
+		}
 	}
 
 	//-r option
@@ -113,8 +125,24 @@ parsechar(tmp,onlysrcfname,"/");
 	}
 
 
-	printf("option:%s src:%s dst:%s\n",option,src,dst);
-	list_print();
+	//printf("option:%s src:%s dst:%s\n",option,src,dst);
+	//list_print();
+	return 0;
+}
+int rsync_copyF(char *src,char *onlysrcfname){
+	printf("rsyn_copy file\n");
+	return 0;
+}
+int	rsync_copyD(char *src,char *onlysrcfname){
+	printf("rsync_copy dir\n");
+	return 0;
+}
+int rsync_replaceF(char *src, char *onlysrcfname){
+	printf("rsync_replace file\n");
+	return 0;
+}
+int rsync_replaceD(char *src, char *onlysrcfname){
+	printf("rsync_replace dir\n");
 	return 0;
 }
 
@@ -142,7 +170,7 @@ int scan_dst(char *dststr, Node *srcnode){
 			continue;
 		}
 		strcpy(ptr,flist[i]->d_name);
-		printf("d_name:%s\n",flist[i]->d_name);
+		//printf("d_name:%s\n",flist[i]->d_name);
 		Node *node=(Node *)malloc(sizeof(Node));
 		memset(node,0,sizeof(Node));
 
@@ -157,15 +185,14 @@ int scan_dst(char *dststr, Node *srcnode){
 
 		memset(dstpath,0,PATH_SIZE);
 		/*if(realpath(flist[i]->d_name,dstpath)==NULL){
-			fprintf(stderr,"realpath() error\n");
-			return -1;
-		}*/
+		  fprintf(stderr,"realpath() error\n");
+		  return -1;
+		  }*/
 
 		strcpy(node->dstpath,dststr);//flist[i]->d_name);
 		list_insert(node);
 
 		if(S_ISDIR(statbuf.st_mode)){
-			printf("recursive,,,\n");
 			scan_dst(dststr,node);
 		}
 
@@ -190,7 +217,7 @@ int list_samenamesearch(char *cmpfname){
 	Node *search;
 	search=head;
 	while(search){
-		printf("dst:%s src:%s\n",search->onlydstfname,cmpfname);
+		//printf("dst:%s src:%s\n",search->onlydstfname,cmpfname);
 		if(!strcmp(search->onlydstfname,cmpfname))
 			return 1;//존재하는 파일/디렉토리 
 		search=search->next;
@@ -201,8 +228,8 @@ int list_samefilesearch(char *cmpfname,int cmpmtime, int cmpfsize){
 	Node *search;
 	search=head;
 	while(search){
-	//	printf("dst:path:%s mtime:%d size:%d\n",search->dstpath,search->mtime,search->fsize);
-		if(!strcmp(search->dstpath,cmpfname)&&(search->mtime==cmpmtime)&&(search->fsize==cmpfsize))
+//			printf("dst:path:%s mtime:%d size:%d\n",search->dstpath,search->mtime,search->fsize);
+		if(!strcmp(search->onlydstfname,cmpfname)&&(search->mtime==cmpmtime)&&(search->fsize==cmpfsize))
 			return 1;//존재하는 파일/디렉토리 
 		search=search->next;
 	}

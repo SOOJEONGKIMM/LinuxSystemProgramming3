@@ -39,3 +39,7 @@ void list_print();
 int list_samenamesearch(char *cmpfname);
 int list_samefilesearch(char *cmpfname,int cmpmtime, int cmpfsize);
 void parsechar(char *tmp,char *onlyfname,char *ch);
+int rsync_copyF(char *src,char *onlysrcfname);
+int	rsync_copyD(char *src,char *onlysrcfname);
+int rsync_replaceF(char *src, char *onlysrcfname);
+int rsync_replaceD(char *src, char *onlysrcfname);
