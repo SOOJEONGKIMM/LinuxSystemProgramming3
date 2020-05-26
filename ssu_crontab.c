@@ -5,6 +5,11 @@ int removeOpt = 0;
 int exitOpt = 0;
 int invalidOpt = 0;
 
+int main(void) {
+	ssu_crontab_prompt();
+	return 0;
+}
+
 void ssu_crontab_prompt(void) {
 	char cmdbuf[BUFFER_SIZE];
 	int cmd;
@@ -194,6 +199,7 @@ int do_addOpt(char *str) {
 
 	//실행주기 예외처리:*-,/이외의 기호인 경우, 항목이5개아닌경우,각항목이 범위를 벗어난 경우,  주기'/'숫자 형태가 아닌 경우 
 
+	int goodinput=0;
 	if(strlen(min)==0||strlen(hour)==0||strlen(day)==0||strlen(month)==0||strlen(weekday)==0){
 		printf("run cycle number is not five\n");
 		gettimeofday(&end_t, NULL);
@@ -205,7 +211,7 @@ int do_addOpt(char *str) {
 	int z=0;
 	for(z=0;z<strlen(min);z++){
 		if(((0x30<min[z])&&(min[z]<0x39))||min[z]==0x2A||min[z]==0x2D||min[z]==0x2C||min[z]==0x2F)
-			printf("good input\n");
+			goodinput=1;
 		else{
 			printf("run cycle input is wrong\n");
 			gettimeofday(&end_t, NULL);
@@ -228,7 +234,6 @@ int do_addOpt(char *str) {
 	}
 	//범위를 벗어난 경우
 	int minint=atoi(min);
-	printf("minint:%d\n",minint);
 	if(minint<0||minint>59){
 		printf("runcycle range is wrong\n");
 		gettimeofday(&end_t, NULL);
@@ -241,7 +246,7 @@ int do_addOpt(char *str) {
 	//hour 예외처리 
 	for(z=0;z<strlen(hour);z++){
 		if(((0x30<hour[z])&&(hour[z]<0x39))||hour[z]==0x2A||hour[z]==0x2D||hour[z]==0x2C||hour[z]==0x2F)
-			printf("good input\n");
+			goodinput=1;
 		else{
 			printf("run cycle input is wrong\n");
 			gettimeofday(&end_t, NULL);
@@ -264,7 +269,6 @@ int do_addOpt(char *str) {
 	}
 	//범위를 벗어난 경우
 	int hourint=atoi(hour);
-	printf("hourint:%d\n",hourint);
 	if(hourint<0||hourint>23){
 		printf("runcycle range is wrong\n");
 		gettimeofday(&end_t, NULL);
@@ -275,7 +279,7 @@ int do_addOpt(char *str) {
 	//day 예외처리 
 	for(z=0;z<strlen(day);z++){
 		if(((0x30<day[z])&&(day[z]<0x39))||day[z]==0x2A||day[z]==0x2D||day[z]==0x2C||day[z]==0x2F)
-			printf("good input\n");
+			goodinput=1;
 		else{
 			printf("run cycle input is wrong\n");
 			gettimeofday(&end_t, NULL);
@@ -298,7 +302,6 @@ int do_addOpt(char *str) {
 	}
 	//범위를 벗어난 경우
 	int dayint=atoi(day);
-	printf("dayint:%d\n",dayint);
 	if(dayint<0||dayint>31){
 		printf("runcycle range is wrong\n");
 		gettimeofday(&end_t, NULL);
@@ -309,7 +312,7 @@ int do_addOpt(char *str) {
 	//month 예외처리 
 	for(z=0;z<strlen(month);z++){
 		if(((0x30<month[z])&&(month[z]<0x39))||month[z]==0x2A||month[z]==0x2D||month[z]==0x2C||month[z]==0x2F)
-			printf("good input\n");
+			goodinput=1;
 		else{
 			printf("run cycle input is wrong\n");
 			gettimeofday(&end_t, NULL);
@@ -332,7 +335,6 @@ int do_addOpt(char *str) {
 	}
 	//범위를 벗어난 경우
 	int monthint=atoi(month);
-	printf("monthint:%d\n",monthint);
 	if(monthint<0||monthint>12){
 		printf("runcycle range is wrong\n");
 		gettimeofday(&end_t, NULL);
@@ -343,7 +345,7 @@ int do_addOpt(char *str) {
 	//weekday 예외처리 
 	for(z=0;z<strlen(weekday);z++){
 		if(((0x30<weekday[z])&&(weekday[z]<0x39))||weekday[z]==0x2A||weekday[z]==0x2D||weekday[z]==0x2C||weekday[z]==0x2F)
-			printf("good input\n");
+			goodinput=1;
 		else{
 			printf("run cycle input is wrong\n");
 			gettimeofday(&end_t, NULL);
@@ -366,7 +368,6 @@ int do_addOpt(char *str) {
 	}
 	//범위를 벗어난 경우
 	int weekint=atoi(weekday);
-	printf("weekint:%d\n",weekint);
 	if(weekint<0||weekint>6){
 		printf("runcycle range is wrong\n");
 		gettimeofday(&end_t, NULL);
@@ -403,7 +404,11 @@ int do_addOpt(char *str) {
 		fprintf(stderr,"fopen error for %s\n",cronfile);
 		exit(1);
 	}
-	fprintf(fp,"%s\n",str);
+	char cronfilebuf[BUFFER_SIZE];
+	memset(cronfilebuf,0,BUFFER_SIZE);
+	sprintf(cronfilebuf,"%s %s %s %s %s %s",min,hour,day,month,weekday,syscmd);
+
+	fprintf(fp,"%s\n",cronfilebuf);
 	fclose(fp);
 
 	//추가된 명령어까지 ssu_crontab_file 내용 표준출력 
