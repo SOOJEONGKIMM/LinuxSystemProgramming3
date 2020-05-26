@@ -18,6 +18,24 @@
 #define BUFFER_SIZE 1024
 #define TIME_SIZE 64
 #define FILE_SIZE 128
+#define PATH_SIZE 256
 #define OPT_SIZE 8 
 
 struct timeval begin_t, end_t;
+
+typedef struct _node{
+	char dstpath[PATH_SIZE];
+	char onlydstfname[PATH_SIZE];
+	int mtime;
+	int fsize;
+	struct _node *next;
+}Node;
+Node *head;
+
+
+int scan_dst(char *dststr, Node *srcnode);
+void list_insert(Node *newnode);
+void list_print();
+int list_samenamesearch(char *cmpfname);
+int list_samefilesearch(char *cmpfname,int cmpmtime, int cmpfsize);
+void parsechar(char *tmp,char *onlyfname,char *ch);
