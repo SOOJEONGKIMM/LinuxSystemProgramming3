@@ -7,6 +7,7 @@ int main(int argc, char *argv[]){
 	memset(option,0,OPT_SIZE);
 	memset(src,0,FILE_SIZE);
 	memset(dst,0,FILE_SIZE);
+	system("ls");
 
 	if(argc<3){
 		fprintf(stderr,"Usage: %s [option] <src> <dst>\n",argv[0]);
@@ -80,18 +81,24 @@ int main(int argc, char *argv[]){
 		fprintf(stderr,"Usage: %s [option] <src> <dst>\n",argv[0]);
 		exit(1);
 	}
+	char dstscan[PATH_SIZE];//스캔하면서 dst배열포인터가 변형되므로 임시변수생성 
+	memset(dstscan,0,PATH_SIZE);
+	strcpy(dstscan,dst);
 	//dst 디렉토리 스캔 
 	Node *newnode;
 	newnode=(Node*)malloc(sizeof(Node));
-	scan_dst(dst, newnode);
+	scan_dst(dstscan, newnode);
 
 	int samefile=0;
 	int samename=0;
 	int nofile=0;
 	if(!list_samefilesearch(onlysrcfname,srcmtime, srcfsize)&&!list_samenamesearch(onlysrcfname))
 		nofile=1;
-	if(list_samefilesearch(onlysrcfname,srcmtime, srcfsize))
+	if(list_samefilesearch(onlysrcfname,srcmtime, srcfsize)){
+		printf("same file. rsync job canceled.\n");
 		samefile=1;
+		exit(0);
+	}
 	if(!list_samefilesearch(onlysrcfname,srcmtime, srcfsize)&&list_samenamesearch(onlysrcfname))
 		samename=1;
 	printf("no:%d same file:%d, name:%d",nofile,samefile,samename);
@@ -99,13 +106,13 @@ int main(int argc, char *argv[]){
 	if(strlen(option)==0){
 		if(nofile){
 			if(file_src)
-				rsync_copyF(src,onlysrcfname);
+				rsync_copyF(src,onlysrcfname,dst);
 			else if(dir_src)
 				rsync_copyD(src,onlysrcfname);
 		}
 		else if(samename){
 			if(file_src)
-				rsync_replaceF(src, onlysrcfname);
+				rsync_replaceF(src, onlysrcfname,dst);
 			else if(dir_src)
 				rsync_replaceD(src, onlysrcfname);
 		}
@@ -125,25 +132,108 @@ int main(int argc, char *argv[]){
 	}
 
 
-	//printf("option:%s src:%s dst:%s\n",option,src,dst);
+	printf("option:%s src:%s dst:%s\n",option,src,dst);
 	//list_print();
 	return 0;
 }
-int rsync_copyF(char *src,char *onlysrcfname){
+//src파일이 dst디렉토리 내 동일파일 존재하지않으면
+//src파일을 dst 디렉토니 내에 복사함 
+int rsync_copyF(char *src,char *onlysrcfname,char *dst){
+	char newdst[PATH_SIZE];
+	FILE *srcfpr;
+	FILE *srcfpw;
+	signal(SIGINT, (void*)quit_rsync);
+
+	//src파일 복사(후에 srcfpr은 dst디렉토리로 옮겨짐)
+	if((srcfpr=fopen(src,"r"))<0){
+		fprintf(stderr,"fopen error for src_read:%s\n",src);
+		exit(1);
+	}
+	struct stat srcstat;
+	lstat(src,&srcstat);
+	char tmpname[PATH_SIZE];
+	memset(tmpname,0,PATH_SIZE);
+	sprintf(tmpname,"%stmp",src);
+	if((srcfpw=fopen(tmpname,"w"))<0){
+		fprintf(stderr,"fopen error for src_write:%s\n",src);
+		exit(1);
+	}
+	
+	char buf[BUFFER_SIZE];
+	memset(buf,0,BUFFER_SIZE);
+	while(!feof(srcfpr)){
+		fgets(buf,sizeof(buf),srcfpr);
+		fputs(buf,srcfpw);
+		fseek(srcfpw,0,SEEK_END);
+		sprintf(buf,"\n");
+	}
+	printf("only:%s\n",onlysrcfname);
+	fclose(srcfpr);
+	fclose(srcfpw);
+
+	//src파일을 dst디렉토리 내로 옮김 
+	memset(newdst,0,PATH_SIZE);
+	printf("dst:%s\n",dst);
+	sprintf(newdst,"%s/%s",dst,onlysrcfname);
+	if(rename(src,newdst)<0){
+		fprintf(stderr,"rename error for %s to %s\n",src,newdst);
+		exit(1);
+	}
+	//tmp를 src이름으로 변경 
+	if(rename(tmpname,src)<0){
+		fprintf(stderr,"rename error for %s to %s\n",tmpname,src);
+		exit(1);
+	}
+	//복사src를 기존src접근권한으로 변경 
+	if(chmod(src,srcstat.st_mode)<0){
+		fprintf(stderr,"chmod error for newsrc:%s\n",src);
+		exit(1);
+	}
+		
 	printf("rsyn_copy file\n");
 	return 0;
 }
 int	rsync_copyD(char *src,char *onlysrcfname){
+	signal(SIGINT, (void*)quit_rsync);
+	while(1){
 	printf("rsync_copy dir\n");
+	}
 	return 0;
 }
-int rsync_replaceF(char *src, char *onlysrcfname){
+//dst디렉토리 내 파일이름이 같은 다른 파일인 경우 
+//dst디렉토리 내 파일을 src파일로 대체함 
+int rsync_replaceF(char *src, char *onlysrcfname,char *dst){
+	char newdst[PATH_SIZE];
+	signal(SIGINT, (void*)quit_rsync);
+	memset(newdst,0,PATH_SIZE);
+	printf("dst:%s\n",dst);
+	sprintf(newdst,"%s/%s",dst,onlysrcfname);
+	if(rename(src,newdst)<0){
+		fprintf(stderr,"rename error for %s to %s\n",src,newdst);
+		exit(1);
+	}
+	if(remove(dst)!=0){
+		fprintf(stderr,"remove error for dst:%s\n",dst);
+		exit(1);
+	}
+	
 	printf("rsync_replace file\n");
 	return 0;
 }
 int rsync_replaceD(char *src, char *onlysrcfname){
+	signal(SIGINT, (void*)quit_rsync);
 	printf("rsync_replace dir\n");
 	return 0;
+}
+//동기화 작업 중 SIGINT발생시 동기화작업취소되고 그전상태로 유지되어야함 
+static void quit_rsync(int signo){
+	/*if(rename(src,newdst)<0){
+		fprintf(stderr,"rename error for %s to %s\n",src,newdst);
+		exit(1);
+	}*/
+
+	printf("got SIGINT(%d).. quiting rsync job..\n",SIGINT);
+	exit(0);
 }
 
 int scan_dst(char *dststr, Node *srcnode){
