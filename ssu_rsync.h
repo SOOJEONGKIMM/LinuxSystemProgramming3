@@ -38,6 +38,7 @@ typedef struct _snode{
 	char srcpath[PATH_SIZE];
 	char onlysrcfname[FILE_SIZE];
 	char primfname[FILE_SIZE];//서브디렉토리 제외 파일들만 
+	char logpath[PATH_SIZE];
 	int mtime;
 	long fsize;
 	struct _snode *next;
@@ -46,7 +47,7 @@ sNode *shead;
 
 
 int scan_dst(char *dststr, Node *srcnode);
-int scan_src(char *srcstr, sNode *srcnode, int nosub);
+int scan_src(char *srcstr, sNode *srcnode,int nosub,char *logpath);
 void list_dstinsert(Node *newnode);
 void list_srcinsert(sNode *newnode);
 void list_dstprint();

@@ -122,7 +122,7 @@ int main(int argc, char *argv[]){
 			if(file_src)
 				rsync_copyF(src,onlysrcfname,dst,cmdstr);
 			else if(dir_src){//r옵션 없는 src디렉토리 경우, 서브디렉토리 제외 파일들만 복사 
-				scan_src(srcscan, srcnode,1);
+				scan_src(srcscan, srcnode,1,onlysrcfname);
 				rsync_copyD(src,dst,cmdstr);
 			}
 		}
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]){
 			if(file_src)
 				rsync_replaceF(src, onlysrcfname,dst,cmdstr);
 			else if(dir_src){
-				scan_src(srcscan, srcnode,1);
+				scan_src(srcscan, srcnode,1,onlysrcfname);
 				rsync_replaceD(src, onlysrcfname,dst,cmdstr);
 			}
 		}
@@ -272,7 +272,7 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr){
 				fprintf(stderr,"chmod error for newsrc:%s\n",src);
 				exit(1);
 			}
-			write_rsynclog_files(srcd->onlysrcfname,srcd->fsize);
+			write_rsynclog_files(srcd->logpath,srcd->fsize);
 		}
 		srcd=srcd->next;
 	}
@@ -331,7 +331,7 @@ int rsync_replaceD(char *src, char *onlysrcdname, char *dst,char *cmdstr){
 				fprintf(stderr,"rename error for %s to %s\n",srcd->srcpath,newdst);
 				exit(1);
 			}
-			write_rsynclog_files(srcd->onlysrcfname,srcd->fsize);
+			write_rsynclog_files(srcd->logpath,srcd->fsize);
 			//혹시라도 src에 남아있다면 삭제작업 
 			if(access(srcd->srcpath,F_OK)==0){
 				if(remove(srcd->srcpath)!=0){
@@ -409,7 +409,7 @@ int scan_dst(char *dststr, Node *srcnode){
 	}
 	return 1;
 }
-int scan_src(char *srcstr, sNode *srcnode,int nosub){
+int scan_src(char *srcstr, sNode *srcnode,int nosub,char *logpath){
 
 	if(nosub)//서브디렉토리 제외하고 리스트생성 다시하는 경우 
 		shead=NULL;
@@ -424,6 +424,11 @@ int scan_src(char *srcstr, sNode *srcnode,int nosub){
 	*ptr++='/';
 	*ptr='\0';
 
+	char *logptr;
+	logptr=logpath+strlen(logpath);
+	*logptr++='/';
+	*logptr='\0';
+
 	if((countdirp=scandir(srcstr, &flist, 0, alphasort))<0){
 		fprintf(stderr,"scandir error for %s\n",srcstr);
 		return -1;
@@ -436,6 +441,8 @@ int scan_src(char *srcstr, sNode *srcnode,int nosub){
 			continue;
 		}
 		strcpy(ptr,flist[i]->d_name);
+		strcpy(logptr,flist[i]->d_name);
+	printf("logpath:%s\n",logpath);
 		printf("d_name:%s\n",flist[i]->d_name);
 		sNode *node=(sNode *)malloc(sizeof(sNode));
 		memset(node,0,sizeof(sNode));
@@ -448,6 +455,7 @@ int scan_src(char *srcstr, sNode *srcnode,int nosub){
 		strcpy(node->onlysrcfname,flist[i]->d_name);
 		node->mtime=statbuf.st_mtime;
 		node->fsize=statbuf.st_size;
+		strcpy(node->logpath,logpath);
 		printf("fname:%s mtime:%d size:%ld\n",node->onlysrcfname,node->mtime,node->fsize);
 
 
@@ -465,7 +473,7 @@ int scan_src(char *srcstr, sNode *srcnode,int nosub){
 
 		if(S_ISDIR(statbuf.st_mode)){
 			if(!nosub)
-				scan_src(srcstr,node,0);//재귀 
+				scan_src(srcstr,node,0,flist[i]->d_name);//재귀 
 		}
 
 		i++;
