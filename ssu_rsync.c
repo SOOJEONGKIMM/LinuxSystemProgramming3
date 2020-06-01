@@ -125,11 +125,13 @@ int main(int argc, char *argv[]){
 			if(!strcmp(option,"-r")){
 				printf("HERE\n");
 				scan_src(srcscan, srcnode,0,onlysrcfname);
+				rsync_copyD(src,dst,cmdstr,1);
 			}
-			else
+			else if(strcmp(option,"-t")){
 				scan_src(srcscan, srcnode,1,onlysrcfname);
+				rsync_copyD(src,dst,cmdstr,0);
+			}
 
-			rsync_copyD(src,dst,cmdstr);
 		}
 	}
 	else if(samename){
@@ -140,7 +142,7 @@ int main(int argc, char *argv[]){
 			if(!strcmp(option,"-r")){
 				scan_src(srcscan, srcnode,0,onlysrcfname);
 			}
-			else
+			else if(strcmp(option,"-t"))
 				scan_src(srcscan, srcnode,1,onlysrcfname);
 			rsync_replaceD(src, onlysrcfname,dst,cmdstr);
 		}
@@ -148,7 +150,7 @@ int main(int argc, char *argv[]){
 
 	//-t option
 	if(!strcmp(option,"-t")){
-		printf("-t opt\n");
+		do_topt(src,dst,cmdstr);
 	}
 	//-m option
 	if(!strcmp(option,"-m")){
@@ -158,11 +160,11 @@ int main(int argc, char *argv[]){
 			if(mopt_samefilesearch(newnode->onlydstfname,newnode->mtime, newnode->fsize,cmdstr)){
 				if(remove(newnode->dstpath)!=0){
 					fprintf(stderr,"remove error for dst:%s\n",newnode->dstpath);
-			newnode=newnode->next;
+					newnode=newnode->next;
 					continue;//빈 디렉토리 아닌 경우도 있으므로 넘김 
 				}
 				else{
-					write_rsynclog_files(newnode->onlydstfname,newnode->fsize);
+					write_rsynclog_files(newnode->onlydstfname,-1);
 				}
 			}
 			newnode=newnode->next;
@@ -173,6 +175,24 @@ int main(int argc, char *argv[]){
 	printf("option:%s src:%s dst:%s\n",option,src,dst);
 	//list_print();
 	return 0;
+}
+void do_topt(char *src, char *dst, char *cmdstr){
+	char tarcmd[PATH_SIZE];
+	char untarcmd[PATH_SIZE];
+	memset(tarcmd,0,PATH_SIZE);
+	memset(untarcmd,0,PATH_SIZE);
+
+	sprintf(tarcmd,"tar cf src.tar %s",src);
+	system(tarcmd);
+	printf("tarcmd:%s\n",tarcmd);
+
+	sprintf(untarcmd,"tar -xf src.tar -C %s",dst);
+	system(untarcmd);
+	printf("untarcmd:%s\n",untarcmd);
+
+	remove("src.tar");
+
+
 }
 int mopt_samefilesearch(char *cmpfname,int cmpmtime, long cmpfsize,char *cmdstr){
 	int exist=0;
@@ -193,8 +213,8 @@ int mopt_samefilesearch(char *cmpfname,int cmpmtime, long cmpfsize,char *cmdstr)
 	}
 	if(!exist){
 		count++;
-		if(count==1)
-			write_rsynclog_timecmd(cmdstr);
+		/*if(count==1)
+		  write_rsynclog_timecmd(cmdstr);*/
 		return 1;
 	}
 	return 0;
@@ -259,7 +279,7 @@ int rsync_copyF(char *src,char *onlysrcfname,char *dst,char *cmdstr){
 	return 0;
 }
 //서브디렉토리를 제외한 디렉토리 내 파일들을 dst디렉토리로 복사함 (no ropt)
-int	rsync_copyD(char *src, char *dst,char *cmdstr){
+int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 	char newdst[PATH_SIZE];
 	FILE *srcfpr;
 	FILE *srcfpw;
@@ -325,7 +345,9 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr){
 				}
 			}
 			else if(S_ISDIR(srcstat.st_mode)){
-				mkdir(newdst,srcstat.st_mode);
+				if(ropt){
+					mkdir(newdst,srcstat.st_mode);
+				}
 			}
 			write_rsynclog_files(srcd->logpath,srcd->fsize);
 		}
@@ -662,6 +684,9 @@ void write_rsynclog_files(char *fname, long fsize){
 		exit(1);
 	}
 	fseek(fp,0,SEEK_END);
-	fprintf(fp,"%s %ldbytes\n",fname,fsize);//***상대경로로 바꿔야함 
+	if(fsize==-1)
+		fprintf(fp,"%s delete\n",fname);
+	else
+		fprintf(fp,"%s %ldbytes\n",fname,fsize);
 	fclose(fp);
 }
