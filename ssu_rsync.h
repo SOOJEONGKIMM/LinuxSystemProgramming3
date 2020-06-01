@@ -23,24 +23,39 @@
 
 struct timeval begin_t, end_t;
 
-typedef struct _node{
+//dst
+typedef struct _dnode{
 	char dstpath[PATH_SIZE];
 	char onlydstfname[PATH_SIZE];
 	int mtime;
-	int fsize;
-	struct _node *next;
+	long fsize;
+	struct _dnode *next;
 }Node;
 Node *head;
 
+//src
+typedef struct _snode{
+	char srcpath[PATH_SIZE];
+	char onlysrcfname[FILE_SIZE];
+	char primfname[FILE_SIZE];//서브디렉토리 제외 파일들만 
+	int mtime;
+	long fsize;
+	struct _snode *next;
+}sNode;
+sNode *shead;
+
 
 int scan_dst(char *dststr, Node *srcnode);
-void list_insert(Node *newnode);
-void list_print();
+int scan_src(char *srcstr, sNode *srcnode, int nosub);
+void list_dstinsert(Node *newnode);
+void list_srcinsert(sNode *newnode);
+void list_dstprint();
+void list_srcprint();
 int list_samenamesearch(char *cmpfname);
-int list_samefilesearch(char *cmpfname,int cmpmtime, int cmpfsize);
+int list_samefilesearch(char *cmpfname,int cmpmtime, long cmpfsize);
 void parsechar(char *tmp,char *onlyfname,char *ch);
 int rsync_copyF(char *src,char *onlysrcfname,char *dst);
-int	rsync_copyD(char *src,char *onlysrcfname);
+int	rsync_copyD(char *src,char *dst);
 int rsync_replaceF(char *src, char *onlysrcfname,char *dst);
-int rsync_replaceD(char *src, char *onlysrcfname);
+int rsync_replaceD(char *src, char *onlysrcfname,char *dst);
 static void quit_rsync(int signo);
