@@ -23,6 +23,9 @@
 
 struct timeval begin_t, end_t;
 
+	char tmpdst[PATH_SIZE];
+	char sigdst[PATH_SIZE];
+
 //dst
 typedef struct _dnode{
 	char dstpath[PATH_SIZE];
