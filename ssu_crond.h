@@ -19,6 +19,7 @@
 
 struct timeval begin_t, end_t;
 
-void readcycletime();
-void calcul_time(char *crondstr);
+void read_cronfile();
+void read_timecmd(char *str);
+void calcultime(char *timestr);
 void startdaemon();

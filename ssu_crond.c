@@ -1,9 +1,9 @@
 #include "./ssu_crond.h"
 int main(void){
-	readcycletime();
+	read_cronfile();
 	return 0;
 }
-void readcycletime(){
+void read_cronfile(){
 	//ssu_crontab_file에서 주기가져옴  
 	FILE *fp;
 	char *cronfile="ssu_crontab_file";
@@ -19,17 +19,14 @@ void readcycletime(){
 		if(feof(fp))
 			break;
 		printf("%s",cronfilebuf);
-//		memset(cronfilebuf,0,BUFFER_SIZE);
+		read_timecmd(cronfilebuf);
+		memset(cronfilebuf,0,BUFFER_SIZE);
 	}
-	//sprintf(cronfilebuf,"%s %s %s %s %s %s",min,hour,day,month,weekday,syscmd);
-	calcul_time(cronfilebuf);
 
 	fclose(fp);
 
 } 
-void calcul_time(char *str){
-	//trim "add" cmd part
-	printf("str:%s\n",str);
+void read_timecmd(char *str){
 	//실행주기 명령어 입력받는 코드
 	//실행주기 입력: *'\0'*'\0'*'\0'*'\0'*'\0' 공백 다섯번째까지 
 	char min[TIME_SIZE];
@@ -54,6 +51,7 @@ void calcul_time(char *str){
 		a++;
 		i++;
 	}
+	calcultime(min);
 	printf("min:%s\n",min);
 	//hour
 	i=j;
@@ -65,6 +63,7 @@ void calcul_time(char *str){
 		a++;
 		i++;
 	}
+	calcultime(hour);
 	printf("hour:%s\n",hour);
 	//day
 	i=j;
@@ -76,6 +75,7 @@ void calcul_time(char *str){
 		a++;
 		i++;
 	}
+	calcultime(day);
 	printf("day:%s\n",day);
 	//month
 	i=j;
@@ -87,6 +87,7 @@ void calcul_time(char *str){
 		a++;
 		i++;
 	}
+	calcultime(month);
 	printf("month:%s\n",month);
 	//weekday
 	i=j;
@@ -98,6 +99,7 @@ void calcul_time(char *str){
 		a++;
 		i++;
 	}
+	calcultime(weekday);
 	printf("weekday:%s\n",weekday);
 	//명령어 입력 '\n' 개행만날때까지 _명령어는 예외처리 안해도됨 
 	i=j;
@@ -110,6 +112,98 @@ void calcul_time(char *str){
 		i++;
 	}
 	printf("sys:%s\n",syscmd);
+
+
+}
+void calcultime(char *timestr){
+	printf("time:%s\n",timestr);
+	char first[TIME_SIZE];
+	memset(first,0,TIME_SIZE);
+	char second[TIME_SIZE];
+	memset(second,0,TIME_SIZE);
+	int a=0;
+	int j,i;
+	int len=strlen(timestr);
+	// 1-5/2,6-10/3->2,4,8분마다 실행 
+	for(j=0;j<len && timestr[j]!=',';j++){
+		first[a]=timestr[j];
+		a++;
+		i++;
+	}
+	printf("first:%s\n",first);
+
+	// 1-5/2 -> 2,4분마다 실행 
+	char slash1[TIME_SIZE];
+	memset(slash1,0,TIME_SIZE);
+	char slash2[TIME_SIZE];
+	memset(slash2,0,TIME_SIZE);
+	int ii=0;int aa=0; int jj=0;
+	for(ii=0;ii<strlen(first) && first[ii]!='/';ii++){
+		slash1[aa]=first[jj];
+		jj++;
+		aa++;
+	}
+	printf("slash1:%s\n",slash1);//1-5
+	ii=jj;
+	while(ii<len && first[ii]=='/')
+		ii++;
+	aa=0;
+	for(jj=ii;jj<strlen(first) && first[j]!='/';jj++){
+		slash2[aa]=first[jj];
+		aa++;
+		ii++;
+	}
+	//1-5에서 1 5
+	char startt[TIME_SIZE];
+	char endtt[TIME_SIZE];
+	memset(startt,0,TIME_SIZE);
+	memset(endtt,0,TIME_SIZE);
+	int ix=0;int ax=0; int jx=0;
+	//1부터
+	for(ix=0;ix<strlen(slash1) && slash1[ix]!='-';ix++){
+		startt[ax]=slash1[jx];
+		jx++;
+		ax++;
+	}
+	printf("slash1:%s\n",slash1);//1-5
+	ix=jx;
+	while(ix<strlen(slash1) && slash1[ix]=='-')
+		ix++;
+	ax=0;
+	//5까지
+	for(jx=ix;jx<strlen(slash1) && slash1[jx]!='-';jx++){
+		endtt[ax]=slash1[jx];
+		ax++;
+		ix++;
+	}
+	printf("start:%s\n",startt);
+	printf("end:%s\n",endtt);
+
+	int jmp=atoi(slash2);
+	printf("slash2:%s\n",slash2);//2만큼씩 건너뜀
+	int startT=0;
+	startT=atoi(startt);
+	int endT=0;
+	endT=atoi(endtt);
+	printf("st:%d en:%d\n",startT,endT);
+	int cnt1=startT+jmp;
+	int cnt2=cnt1+jmp;
+	printf("cnt1:%d\n",cnt1);
+	printf("cnt2:%d\n",cnt2);
+
+
+
+	i=j;
+	while(i<len && timestr[i]==',')
+		i++;
+	a=0;
+	for(j=i;j<len && timestr[j]!=',';j++){
+		second[a]=timestr[j];
+		a++;
+		i++;
+	}
+	printf("second:%s\n",second);
+
 
 
 }
