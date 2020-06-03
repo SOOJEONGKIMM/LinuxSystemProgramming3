@@ -9,7 +9,6 @@ int main(int argc, char *argv[]){
 	memset(src,0,FILE_SIZE);
 	memset(dst,0,FILE_SIZE);
 	memset(cmdstr,0,PATH_SIZE);
-	printf("cmd:%s\n",cmdstr);
 	if(argc<3){
 		fprintf(stderr,"Usage: %s [option] <src> <dst>\n",argv[0]);
 		exit(1);
@@ -24,6 +23,7 @@ int main(int argc, char *argv[]){
 		strcpy(src,argv[2]);
 		strcpy(dst,argv[3]);
 		sprintf(cmdstr,"ssu_rsync %s %s %s",argv[1],argv[2],argv[3]);
+	printf("1cmd:%s\n",cmdstr);
 	}
 	else{
 		if(argc!=3){
@@ -102,13 +102,16 @@ int main(int argc, char *argv[]){
 		samefile=1;
 		exit(0);
 	}
-	if(!list_samefilesearch(onlysrcfname,srcmtime, srcfsize)&&list_samenamesearch(onlysrcfname))
+	if(!list_samefilesearch(onlysrcfname,srcmtime, srcfsize)&&list_samenamesearch(onlysrcfname)){
 		samename=1;
-	printf("no:%d same file:%d, name:%d",nofile,samefile,samename);
+		printf("Same name file. Rsync job cancelled..\n");
+		exit(0);
+	}
 	if(samefile){
 		printf("Same file. Rsync job cancelled..\n");
 		exit(0);
 	}
+	printf("no:%d same file:%d, name:%d",nofile,samefile,samename);
 
 	//src디렉토리 스캔 
 	sNode *srcnode;
@@ -118,7 +121,7 @@ int main(int argc, char *argv[]){
 	strcpy(srcscan,src);
 
 	if(nofile){
-		if(file_src)
+		if(file_src&&strcmp(option,"-t"))
 			rsync_copyF(src,onlysrcfname,dst,cmdstr);
 		else if(dir_src){//r옵션 없는 src디렉토리 경우, 서브디렉토리 제외 파일들만 복사 
 			//-r option
@@ -134,8 +137,8 @@ int main(int argc, char *argv[]){
 
 		}
 	}
-	else if(samename){
-		if(file_src)
+/*	else if(samename){
+		if(file_src&&strcmp(option,"-t"))
 			rsync_replaceF(src, onlysrcfname,dst,cmdstr);
 		else if(dir_src){
 			//-r option
@@ -146,16 +149,21 @@ int main(int argc, char *argv[]){
 				scan_src(srcscan, srcnode,1,onlysrcfname);
 			rsync_replaceD(src, onlysrcfname,dst,cmdstr);
 		}
-	}
+	}*/
 
 	char scansrcfname[FILE_SIZE];
-	memset(scansrcfname,0,PATH_SIZE);
+	memset(scansrcfname,0,FILE_SIZE);
 	strcpy(scansrcfname,onlysrcfname);
 	//-t option
 	if(!strcmp(option,"-t")){
-		scan_src(srcscan, srcnode,0,scansrcfname);
+		if(dir_src){
+			scan_src(srcscan, srcnode,0,scansrcfname);
+			do_topt(src,onlysrcfname,dst,cmdstr,1);
+		}
+		else
+			do_topt(src,onlysrcfname,dst,cmdstr,0);
+
 		printf("srcscan:%s, only:%s\n",srcscan,onlysrcfname);
-		do_topt(src,onlysrcfname,dst,cmdstr);
 	}
 	//-m option
 	if(!strcmp(option,"-m")){
@@ -181,7 +189,7 @@ int main(int argc, char *argv[]){
 	//list_print();
 	return 0;
 }
-void do_topt(char *src, char *onlysrcfname,char *dst, char *cmdstr){
+void do_topt(char *src, char *onlysrcfname,char *dst, char *cmdstr,int isdir){
 	char tarcmd[PATH_SIZE];
 	char untarcmd[PATH_SIZE];
 	char curdir[PATH_SIZE];
@@ -192,8 +200,20 @@ void do_topt(char *src, char *onlysrcfname,char *dst, char *cmdstr){
 	memset(curdir,0,PATH_SIZE);
 
 	strcpy(curdir,getcwd(NULL,0));
-	chdir(src);
-	sprintf(tarcmd,"tar cvf %s.tar *",onlysrcfname);
+
+	//파일만 동기화할때 상대경로압축위해 chdir할 경로 
+	char filesrcpath[PATH_SIZE];
+	memset(filesrcpath,0,PATH_SIZE);
+	strncpy(filesrcpath,src,strlen(src)-strlen(onlysrcfname)-1);
+
+	if(isdir){
+		chdir(src);
+		sprintf(tarcmd,"tar cvf %s.tar *",onlysrcfname);
+	}
+	else{
+		chdir(filesrcpath);
+		sprintf(tarcmd,"tar cvf %s.tar %s",onlysrcfname,onlysrcfname);
+	}
 	system(tarcmd);
 
 	sprintf(tarname,"%s.tar",onlysrcfname);
@@ -222,12 +242,16 @@ void do_topt(char *src, char *onlysrcfname,char *dst, char *cmdstr){
 	}
 	fseek(fp,0,SEEK_END);
 	fprintf(fp,"totalSize %ldbytes\n",tarstat.st_size);
+	if(isdir){
 	sNode *srcd;
 	srcd=shead;
 	while(srcd){
 		fprintf(fp,"%s\n",srcd->subpath);
 		srcd=srcd->next;
 	}
+	}
+	else
+		fprintf(fp,"%s\n",onlysrcfname);
 
 	fclose(fp);
 
@@ -637,7 +661,7 @@ int scan_src(char *srcstr, sNode *srcnode,int nosub,char *logpath){
 		char subpath[PATH_SIZE];
 		memset(subpath,0,PATH_SIZE);
 		char *tmp=strchr(logpath,'/');
-	parsechar(tmp,subpath,"/");
+		parsechar(tmp,subpath,"/");
 		strcpy(node->subpath,subpath);
 		printf("subpath:%s\n",node->subpath);
 

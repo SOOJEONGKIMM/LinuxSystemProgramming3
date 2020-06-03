@@ -65,7 +65,7 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt);
 int rsync_replaceF(char *src, char *onlysrcfname,char *dst,char *cmdstr);
 int rsync_replaceD(char *src,char *onlysrcdname,char *dst,char *cmdstr);
 int mopt_samefilesearch(char *cmpfname,int cmpmtime, long cmpfsize,char *cmdstr);
-void do_topt(char *src, char *onlysrcfname,char *dst, char *cmdstr);
+void do_topt(char *src, char *onlysrcfname,char *dst, char *cmdstr,int isdir);
 static void quit_rsync(int signo);
 void get_time(char *str);
 void write_rsynclog_timecmd(char *cmdstr);
