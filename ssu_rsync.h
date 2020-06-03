@@ -70,3 +70,4 @@ static void quit_rsync(int signo);
 void get_time(char *str);
 void write_rsynclog_timecmd(char *cmdstr);
 void write_rsynclog_files(char *fname, long fsize);
+int rmdirs(const char *path, int force);

@@ -23,7 +23,7 @@ int main(int argc, char *argv[]){
 		strcpy(src,argv[2]);
 		strcpy(dst,argv[3]);
 		sprintf(cmdstr,"ssu_rsync %s %s %s",argv[1],argv[2],argv[3]);
-	printf("1cmd:%s\n",cmdstr);
+		printf("1cmd:%s\n",cmdstr);
 	}
 	else{
 		if(argc!=3){
@@ -137,18 +137,18 @@ int main(int argc, char *argv[]){
 
 		}
 	}
-/*	else if(samename){
+	/*	else if(samename){
 		if(file_src&&strcmp(option,"-t"))
-			rsync_replaceF(src, onlysrcfname,dst,cmdstr);
+		rsync_replaceF(src, onlysrcfname,dst,cmdstr);
 		else if(dir_src){
-			//-r option
-			if(!strcmp(option,"-r")){
-				scan_src(srcscan, srcnode,0,onlysrcfname);
-			}
-			else if(strcmp(option,"-t"))//-r -t 옵션 제외 
-				scan_src(srcscan, srcnode,1,onlysrcfname);
-			rsync_replaceD(src, onlysrcfname,dst,cmdstr);
-		}
+	//-r option
+	if(!strcmp(option,"-r")){
+	scan_src(srcscan, srcnode,0,onlysrcfname);
+	}
+	else if(strcmp(option,"-t"))//-r -t 옵션 제외 
+	scan_src(srcscan, srcnode,1,onlysrcfname);
+	rsync_replaceD(src, onlysrcfname,dst,cmdstr);
+	}
 	}*/
 
 	char scansrcfname[FILE_SIZE];
@@ -195,6 +195,9 @@ void do_topt(char *src, char *onlysrcfname,char *dst, char *cmdstr,int isdir){
 	char curdir[PATH_SIZE];
 	char tarname[FILE_SIZE];
 	char tartocurdir[PATH_SIZE];
+
+	signal(SIGINT, (void*)quit_rsync);
+
 	memset(tarcmd,0,PATH_SIZE);
 	memset(untarcmd,0,PATH_SIZE);
 	memset(curdir,0,PATH_SIZE);
@@ -243,12 +246,12 @@ void do_topt(char *src, char *onlysrcfname,char *dst, char *cmdstr,int isdir){
 	fseek(fp,0,SEEK_END);
 	fprintf(fp,"totalSize %ldbytes\n",tarstat.st_size);
 	if(isdir){
-	sNode *srcd;
-	srcd=shead;
-	while(srcd){
-		fprintf(fp,"%s\n",srcd->subpath);
-		srcd=srcd->next;
-	}
+		sNode *srcd;
+		srcd=shead;
+		while(srcd){
+			fprintf(fp,"%s\n",srcd->subpath);
+			srcd=srcd->next;
+		}
 	}
 	else
 		fprintf(fp,"%s\n",onlysrcfname);
@@ -444,10 +447,10 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 		}
 		srcd=srcd->next;
 	}
-	/*	while(1){
+	while(1){
 		sleep(3);
 		printf("testing sigint..\n");
-		}*/
+	}
 	printf("rsync_copyD\n");
 	return 0;
 }
@@ -542,7 +545,7 @@ static void quit_rsync(int signo){
 	//빈 디렉토리 다시 삭제처리(위에선 빈디렉토리가 아니라 삭제실패됨)
 	sig=shead;
 	while(sig){
-		if(remove(sig->sigsrc)==0)
+		if(rmdirs(sig->sigsrc,1)==0)
 			printf("remove %s succeed\n",sig->sigsrc);
 		else
 			printf("remove %s failed\n",sig->sigsrc);
@@ -831,3 +834,34 @@ void write_rsynclog_files(char *fname, long fsize){
 		fprintf(fp,"%s %ldbytes\n",fname,fsize);
 	fclose(fp);
 }
+int rmdirs(const char *path, int force){
+	DIR *dir_ptr=NULL;
+	struct dirent *file=NULL;
+	struct stat buf;
+	char filename[1024];
+	if((dir_ptr=opendir(path))==NULL){
+		return unlink(path);
+	}
+	while((file=readdir(dir_ptr))!=NULL){
+		if(strcmp(file->d_name,".")==0||strcmp(file->d_name,"..")==0){
+			continue;
+		}
+		sprintf(filename,"%s/%s",path,file->d_name);
+		if(lstat(filename,&buf)==-1){
+			continue;
+		}
+		if(S_ISDIR(buf.st_mode)){
+			if(rmdirs(filename,force)==-1&&!force){
+				return -1;
+			}
+		}
+		else if(S_ISREG(buf.st_mode)||S_ISLNK(buf.st_mode)){
+			if(!unlink(filename)==-1&&force){
+				return -1;
+			}
+		}
+	}
+	closedir(dir_ptr);
+	return rmdir(path);
+}
+
