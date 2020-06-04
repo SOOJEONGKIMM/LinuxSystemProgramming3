@@ -141,6 +141,7 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 	int commacnt=0;
 
 	clear_tokens(tokens);
+	start=end=NULL;
 	start=str;
 	end=strpbrk(start,op);
 	printf("처음 연산자 토큰%s %s 길이:%ld\n",start,end,strlen(start));
@@ -186,6 +187,25 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 					strcpy(tokens[row],end);
 					printf("after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 				}
+				else{
+					//숫자만 있는 경우 
+					if(end[0]==',')
+						strcpy(end,end+1);
+
+					printf("','기호만 존재하고 '/'주기기호는 없음\n");
+					char startbackup[BUFFER_SIZE];
+					strcpy(startbackup,start);
+					printf("before parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
+					int endint=atoi(end);
+		cntslash[cntnum]=endint;
+		cntnum++;
+					printf("cntnum:%d\n",cntnum);
+					strcpy(tokens[row],end);
+					printf("after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
+	for(int i=0;i<cntnum;i++)
+		printf("%d에 저장\n",cntslash[i]);
+				}
+
 				commacnt--;
 			}//','기호개수만큼 while루프돌고 끝 
 		}//','기호 있는 경우끝
@@ -226,6 +246,7 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 	}//숫자only랑 독자적'*'제외 케이스들 끝 
 }
 void parse_calcul(char tokens[TOKEN_CNT][MINLEN],char *start,char *end,int itemcnt,int *savebuf){
+	printf("parse_calcul called\n");
 	char *comma=",";
 	char *slash="/";
 	char *bar="-";
@@ -254,11 +275,11 @@ void parse_calcul(char tokens[TOKEN_CNT][MINLEN],char *start,char *end,int itemc
 		printf("tokens[row+3]:%s\n",tokens[row+3]);//1   1부터
 		printf("tokens[row+4]:%s\n",tokens[row+4]);//5   5까지 
 		count_slash_withbar(tokens[row+3],tokens[row+4],tokens[row+2],savebuf);
-					printf("cntnum:%d\n",cntnum);
+		printf("cntnum:%d\n",cntnum);
 	}
 	else
 		count_slash(tokens[row+1],tokens[row+2],savebuf,itemcnt);
-					printf("cntnum:%d\n",cntnum);
+	printf("cntnum:%d\n",cntnum);
 }
 // 숫자-숫자/주기 계산
 void count_slash_withbar(char *startcnt, char *endcnt, char *slash, int *savebuf){
