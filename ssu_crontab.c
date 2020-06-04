@@ -110,6 +110,7 @@ void ssu_runtime(struct timeval *begin_t, struct timeval *end_t)
 
 int do_addOpt(char *str) {
 	gettimeofday(&begin_t, NULL);
+	char *op=",-*/";
 
 
 
@@ -210,10 +211,10 @@ int do_addOpt(char *str) {
 	//min 예외처리 
 	int z=0;
 	for(z=0;z<strlen(min);z++){
-		if(((0x30<min[z])&&(min[z]<0x39))||min[z]==0x2A||min[z]==0x2D||min[z]==0x2C||min[z]==0x2F)
+		if(((0x30<=min[z])&&(min[z]<=0x39))||min[z]==0x2A||min[z]==0x2D||min[z]==0x2C||min[z]==0x2F)
 			goodinput=1;
 		else{
-			printf("run cycle input is wrong\n");
+			printf("run cycle input is not num,*-/\n");
 			gettimeofday(&end_t, NULL);
 			ssu_runtime(&begin_t, &end_t);
 			printf("\n");
@@ -222,9 +223,9 @@ int do_addOpt(char *str) {
 	}
 	//주기'/'숫자 형태가 아닌 경우 
 	for(z=0;z<strlen(min);z++){
-		if(min[z]==0x2F){
-			if((0x30>min[z+1])||(min[z+1]>0x39)){
-				printf("run cycle input is wrong\n");
+		if(min[z]==0x2F){//'/'주기기호 다음에 
+			if((0x30>min[z+1])||(min[z+1]>0x39)){//0~9숫자가 아니라면 
+				printf("run cycle input is not /num\n");
 				gettimeofday(&end_t, NULL);
 				ssu_runtime(&begin_t, &end_t);
 				printf("\n");
@@ -241,11 +242,46 @@ int do_addOpt(char *str) {
 		printf("\n");
 		return 0;
 	}
+	char *parser=NULL;
+	char *parser1=NULL;
+	char *parser2=NULL;
+	printf("min:%s\n",min);
+		parser=strpbrk(min,op);
+	while(min!=NULL){
+		sleep(1);
+		parser1=parser;
+		parser=strpbrk(parser1,op);
+		if(parser==NULL)
+			break;
+		parser++;
+		printf("parser1:%s parser:%s min:%s\n",parser1,parser,min);
+		parser2=strpbrk(parser,op);
+		printf("parser1:%s parser2:%s min:%s\n",parser1,parser2,min);
+		char bone[TIME_SIZE];
+		memset(bone,0,TIME_SIZE);
+		if(parser2!=NULL)
+			strncpy(bone,parser,strlen(parser)-strlen(parser2));
+		else
+			strcpy(bone,parser);
+		printf("bone:%s\n",bone);
+		int boneint=atoi(bone);
+		if(boneint<0||boneint>59){
+			printf("runcycle range is wrong\n");
+			gettimeofday(&end_t, NULL);
+			ssu_runtime(&begin_t, &end_t);
+			printf("\n");
+			return 0;
+		}
+		if(strlen(parser)!=strlen(bone))
+		parser+=strlen(bone);
+	}
+	//free(parser);
+	//free(parser1);
 
 
 	//hour 예외처리 
 	for(z=0;z<strlen(hour);z++){
-		if(((0x30<hour[z])&&(hour[z]<0x39))||hour[z]==0x2A||hour[z]==0x2D||hour[z]==0x2C||hour[z]==0x2F)
+		if(((0x30<=hour[z])&&(hour[z]<=0x39))||hour[z]==0x2A||hour[z]==0x2D||hour[z]==0x2C||hour[z]==0x2F)
 			goodinput=1;
 		else{
 			printf("run cycle input is wrong\n");
@@ -278,7 +314,7 @@ int do_addOpt(char *str) {
 	}
 	//day 예외처리 
 	for(z=0;z<strlen(day);z++){
-		if(((0x30<day[z])&&(day[z]<0x39))||day[z]==0x2A||day[z]==0x2D||day[z]==0x2C||day[z]==0x2F)
+		if(((0x30<=day[z])&&(day[z]<=0x39))||day[z]==0x2A||day[z]==0x2D||day[z]==0x2C||day[z]==0x2F)
 			goodinput=1;
 		else{
 			printf("run cycle input is wrong\n");
@@ -311,7 +347,7 @@ int do_addOpt(char *str) {
 	}
 	//month 예외처리 
 	for(z=0;z<strlen(month);z++){
-		if(((0x30<month[z])&&(month[z]<0x39))||month[z]==0x2A||month[z]==0x2D||month[z]==0x2C||month[z]==0x2F)
+		if(((0x30<=month[z])&&(month[z]<=0x39))||month[z]==0x2A||month[z]==0x2D||month[z]==0x2C||month[z]==0x2F)
 			goodinput=1;
 		else{
 			printf("run cycle input is wrong\n");
@@ -344,7 +380,7 @@ int do_addOpt(char *str) {
 	}
 	//weekday 예외처리 
 	for(z=0;z<strlen(weekday);z++){
-		if(((0x30<weekday[z])&&(weekday[z]<0x39))||weekday[z]==0x2A||weekday[z]==0x2D||weekday[z]==0x2C||weekday[z]==0x2F)
+		if(((0x30<=weekday[z])&&(weekday[z]<=0x39))||weekday[z]==0x2A||weekday[z]==0x2D||weekday[z]==0x2C||weekday[z]==0x2F)
 			goodinput=1;
 		else{
 			printf("run cycle input is wrong\n");
