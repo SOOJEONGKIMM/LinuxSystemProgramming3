@@ -152,9 +152,9 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 	else if(!strcmp(start,"*")&&strlen(start)==1)//독립적'*'
 		printf("%s %s is '*'str:%s",start,end,str);
 	else{
-		end=strpbrk(start,comma);//','기호로 나누기 
+	/*	end=strpbrk(start,comma);//','기호로 나누기 
 		if(start==end)//','기호가 없는 경우
-			printf("%s %s no ',' exist.str:%s",start,end,str);
+			printf("%s %s no ',' exist.str:%s",start,end,str);*/
 		//','주기기호가 존재한다면 
 		if(strstr(start,",")!=NULL){
 			//','기호 개수 세기 
@@ -166,6 +166,8 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 			//','기호 토큰 나눠주기
 			commacnt++;
 			while(commacnt){
+				if(commacnt!=1)
+					end=strpbrk(start,comma);//','기호로 나누기 
 				while(start<end){
 					printf("POOOOOINTER: *st:%d %s\n",*start,start);
 					printf("PLAY start:%s  !=  %s ','exists.tok:%s\n",start,end,tokens[row]);//숫자만 존재 
@@ -186,24 +188,24 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 					strcpy(end,end+1);
 					strcpy(tokens[row],end);
 					printf("after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
+	clear_tokens(tokens);
 				}
-				else{
+				else {
 					//숫자만 있는 경우 
 					if(end[0]==',')
 						strcpy(end,end+1);
 
 					printf("','기호만 존재하고 '/'주기기호는 없음\n");
 					char startbackup[BUFFER_SIZE];
-					strcpy(startbackup,start);
-					printf("before parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
-					int endint=atoi(end);
-		cntslash[cntnum]=endint;
-		cntnum++;
+					printf("herebefore parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
+					int endint=atoi(tokens[row]);
+					cntslash[cntnum]=endint;
+					cntnum++;
 					printf("cntnum:%d\n",cntnum);
 					strcpy(tokens[row],end);
-					printf("after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
-	for(int i=0;i<cntnum;i++)
-		printf("%d에 저장\n",cntslash[i]);
+					printf("hereafter parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
+					for(int i=0;i<cntnum;i++)
+						printf("%d에 저장\n",cntslash[i]);
 				}
 
 				commacnt--;
