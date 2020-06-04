@@ -1,4 +1,5 @@
 #include "./ssu_crond.h"
+int cntnum=0;
 int main(void){
 	read_cronfile();
 	return 0;
@@ -56,6 +57,7 @@ void read_timecmd(char *str){
 	make_tokens(min,tokens,MIN_ITEM);
 	//calcultime(min);
 	printf("min:%s\n",min);
+	cntnum=0;
 	//hour
 	i=j;
 	while(i<len && str[i]==' ')
@@ -69,6 +71,7 @@ void read_timecmd(char *str){
 	make_tokens(hour,tokens,HOUR_ITEM);
 	//calcultime(hour);
 	printf("hour:%s\n",hour);
+	cntnum=0;
 	//day
 	i=j;
 	while(i<len && str[i]==' ')
@@ -82,6 +85,7 @@ void read_timecmd(char *str){
 	make_tokens(day,tokens,DAY_ITEM);
 	//calcultime(day);
 	printf("day:%s\n",day);
+	cntnum=0;
 	//month
 	i=j;
 	while(i<len && str[i]==' ')
@@ -95,6 +99,7 @@ void read_timecmd(char *str){
 	make_tokens(month,tokens,MONTH_ITEM);
 	//calcultime(month);
 	printf("month:%s\n",month);
+	cntnum=0;
 	//weekday
 	i=j;
 	while(i<len && str[i]==' ')
@@ -108,6 +113,7 @@ void read_timecmd(char *str){
 	make_tokens(weekday,tokens,WEEKDAY_ITEM);
 	//calcultime(weekday);
 	printf("weekday:%s\n",weekday);
+	cntnum=0;
 	//명령어 입력 '\n' 개행만날때까지 _명령어는 예외처리 안해도됨 
 	i=j;
 	while(i<len && str[i]==' ')
@@ -124,8 +130,8 @@ void read_timecmd(char *str){
 }
 int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 	char *start, *end;
-	char tmp[BUFFER_SIZE];
 	int cntslash[BUFFER_SIZE];
+	memset(cntslash,0,BUFFER_SIZE);
 	char *op="*/-,";
 	char *comma=",";
 	char *slash="/";
@@ -137,7 +143,7 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 	clear_tokens(tokens);
 	start=str;
 	end=strpbrk(start,op);
-	printf("처음 연산자 토큰%s %s 길이:%d\n",start,end,strlen(start));
+	printf("처음 연산자 토큰%s %s 길이:%ld\n",start,end,strlen(start));
 
 	//기호 없이 숫자만 존재 
 	if(end==NULL&&(strstr(start,"*")==NULL))
@@ -157,6 +163,7 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 			//start:1-5/2,6-10/3    end:,6-10/3     
 			printf("start:%s  !=  %s ','exists.str:%s\n",start,end,str);//숫자만 존재 
 			//','기호 토큰 나눠주기
+			commacnt++;
 			while(commacnt){
 				while(start<end){
 					printf("POOOOOINTER: *st:%d %s\n",*start,start);
@@ -169,33 +176,15 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 				printf("sta:%s  !=  %s ','exists.tok:%s\n",start,end,tokens[row]);//숫자만 존재 
 				//'/'주기기호가 존재한다면 
 				if(strstr(tokens[row],"/")!=NULL){
-					printf("ihello");
-					//'/'주기 기호로 나누기 
-					end=strpbrk(tokens[row],slash);
-					strcpy(start,tokens[row]);
-					//start:1-5/2 end:/2  tok:1-5/2
-					printf("slash start:%s end:%s tok:%s\n",start,end,tokens[row]);
-					strncpy(tokens[row+1],start,strlen(start)-strlen(end));
+					printf("','기호와 '/'기호 모두 존재\n");
+					char startbackup[BUFFER_SIZE];
+					strcpy(startbackup,start);
+					printf("before parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
+					parse_calcul(tokens,startbackup,end,itemcnt,cntslash);
+					printf("cntnum:%d\n",cntnum);
 					strcpy(end,end+1);
-					printf("end:%s\n",end);
-					strncpy(tokens[row+2],end,strlen(end));
-					//tokens[row+1]:1-5    tokens[row+2]:2
-					printf("tokens[row+1]:%s\n",tokens[row+1]);
-					printf("tokens[row+2]:%s\n",tokens[row+2]);
-					//'-'주기기호가 존재한다면 
-					if(strstr(tokens[row+1],"-")!=NULL){
-						end=strpbrk(tokens[row+1],bar);
-						strcpy(start,tokens[row+1]);
-						printf("bar start:%s end:%s tok:%s\n",start,end,tokens[row+1]); 
-						strncpy(tokens[row+3],start,strlen(start)-strlen(end));
-						strcpy(end,end+1);
-						strncpy(tokens[row+4],end,strlen(end));
-						printf("tokens[row+3]:%s\n",tokens[row+3]);//1   1부터
-						printf("tokens[row+4]:%s\n",tokens[row+4]);//5   5까지 
-						count_slash_withbar(tokens[row+3],tokens[row+4],tokens[row+2],cntslash);
-					}
-					else
-						count_slash(tokens[row+1],tokens[row+2],cntslash,itemcnt);
+					strcpy(tokens[row],end);
+					printf("after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 				}
 				commacnt--;
 			}//','기호개수만큼 while루프돌고 끝 
@@ -236,27 +225,60 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 
 	}//숫자only랑 독자적'*'제외 케이스들 끝 
 }
+void parse_calcul(char tokens[TOKEN_CNT][MINLEN],char *start,char *end,int itemcnt,int *savebuf){
+	char *comma=",";
+	char *slash="/";
+	char *bar="-";
+	int row=0;
+	int i;
+	//'/'주기 기호로 나누기 
+	end=strpbrk(tokens[row],slash);
+	strcpy(start,tokens[row]);
+	//start:1-5/2 end:/2  tok:1-5/2
+	printf("slash start:%s end:%s tok:%s\n",start,end,tokens[row]);
+	strncpy(tokens[row+1],start,strlen(start)-strlen(end));
+	strcpy(end,end+1);
+	printf("end:%s\n",end);
+	strncpy(tokens[row+2],end,strlen(end));
+	//tokens[row+1]:1-5    tokens[row+2]:2
+	printf("tokens[row+1]:%s\n",tokens[row+1]);
+	printf("tokens[row+2]:%s\n",tokens[row+2]);
+	//'-'주기기호가 존재한다면 
+	if(strstr(tokens[row+1],"-")!=NULL){
+		end=strpbrk(tokens[row+1],bar);
+		strcpy(start,tokens[row+1]);
+		printf("bar start:%s end:%s tok:%s\n",start,end,tokens[row+1]); 
+		strncpy(tokens[row+3],start,strlen(start)-strlen(end));
+		strcpy(end,end+1);
+		strncpy(tokens[row+4],end,strlen(end));
+		printf("tokens[row+3]:%s\n",tokens[row+3]);//1   1부터
+		printf("tokens[row+4]:%s\n",tokens[row+4]);//5   5까지 
+		count_slash_withbar(tokens[row+3],tokens[row+4],tokens[row+2],savebuf);
+					printf("cntnum:%d\n",cntnum);
+	}
+	else
+		count_slash(tokens[row+1],tokens[row+2],savebuf,itemcnt);
+					printf("cntnum:%d\n",cntnum);
+}
 // 숫자-숫자/주기 계산
 void count_slash_withbar(char *startcnt, char *endcnt, char *slash, int *savebuf){
 	int startcntINT=atoi(startcnt);
 	int endcntINT=atoi(endcnt);
 	int slashINT=atoi(slash);
-	int i=0;
-	//int itemcnt=item;
 	startcntINT--;
 	while(endcntINT>=startcntINT){
 		startcntINT+=slashINT;
 		printf("st:%d\n",startcntINT);
 		if(endcntINT<=startcntINT)
 			break;
-		savebuf[i]=startcntINT;
-		printf("save[%d]:%d\n",i,savebuf[i]);
-		i+=2;
+		savebuf[cntnum]=startcntINT;
+		printf("save[%d]:%d\n",cntnum,savebuf[cntnum]);
+		cntnum++;
 	}
-
-
-	printf("%s부터 %s까지 %s만큼 건너뛰어 %ls에 저장\n",startcnt,endcnt,slash,savebuf);
-	printf("%d부터 %d까지 %d만큼 건너뛰어 %ls에 저장\n",startcntINT,endcntINT,slashINT,savebuf);
+	printf("%s부터 %s까지 %s만큼 건너뛰어 \n",startcnt,endcnt,slash);
+	printf("%d부터 %d까지 %d만큼 건너뛰어 \n",startcntINT,endcntINT,slashINT);
+	for(int i=0;i<cntnum;i++)
+		printf("%d에 저장\n",savebuf[i]);
 
 }
 //  */주기 계산
@@ -282,11 +304,13 @@ void count_slash(char *cnt, char *slash, int *savebuf,int itemcnt){
 		printf("st:%d\n",startcnt);
 		if(Itemcnt<=startcnt)
 			break;
-		savebuf[i]=startcnt;
-		printf("save[%d]:%d\n",i,savebuf[i]);
-		i+=2;
+		savebuf[cntnum]=startcnt;
+		printf("save[%d]:%d\n",cntnum,savebuf[cntnum]);
+		cntnum++;
 	}
-	printf("%s를  %s만큼 건너뛰어 %ls에 저장\n",cnt,slash,savebuf);
+	printf("%s를  %s만큼 건너뛰어 \n",cnt,slash);
+	for(i=0;i<cntnum;i++)
+		printf("%d에 저장\n",savebuf[i]);
 
 }
 int is_number(char c){

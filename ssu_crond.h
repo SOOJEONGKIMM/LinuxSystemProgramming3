@@ -32,6 +32,7 @@ void read_timecmd(char *str);
 int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt);
 void count_slash_withbar(char *startcnt, char *endcnt, char *slash, int *savebuf);
 void count_slash(char *cnt, char *slash, int *savebuf,int itemcnt);
+void parse_calcul(char tokens[TOKEN_CNT][MINLEN],char *start,char *end,int itemcnt,int *savebuf);
 void clear_tokens(char tokens[TOKEN_CNT][MINLEN]);
 void calcultime(char *timestr);
 void startdaemon();
