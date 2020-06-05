@@ -242,6 +242,7 @@ int do_addOpt(char *str) {
 		printf("\n");
 		return 0;
 	}
+	//주기와 같이 쓰였을때 파싱해서 범위벗어난 경우 예외처리 
 	char *parser=NULL;
 	char *parser1=NULL;
 	char *parser2=NULL;
@@ -275,6 +276,7 @@ int do_addOpt(char *str) {
 		if(strlen(parser)!=strlen(bone))
 		parser+=strlen(bone);
 	}
+	printf("min after exceptionhandling:%s\n",min);
 	//free(parser);
 	//free(parser1);
 
@@ -312,6 +314,57 @@ int do_addOpt(char *str) {
 		printf("\n");
 		return 0;
 	}
+	//주기와 같이 쓰였을때 파싱해서 범위벗어난 경우 예외처리 
+	parser=NULL;
+	parser1=NULL;
+	parser2=NULL;
+	printf("hour:%s\n",hour);
+		parser=strpbrk(hour,op);
+	while(hour!=NULL){
+		sleep(1);
+		parser1=parser;
+		parser=strpbrk(parser1,op);
+		if(parser==NULL)
+			break;
+		parser++;
+		printf("parser1:%s parser:%s hour:%s\n",parser1,parser,hour);
+		parser2=strpbrk(parser,op);
+		printf("parser1:%s parser2:%s hour:%s\n",parser1,parser2,hour);
+		char bone[TIME_SIZE];
+		memset(bone,0,TIME_SIZE);
+		if(parser2!=NULL)
+			strncpy(bone,parser,strlen(parser)-strlen(parser2));
+		else
+			strcpy(bone,parser);
+		printf("bone:%s\n",bone);
+		int boneint=atoi(bone);
+		if(boneint<0||boneint>23){
+			printf("runcycle range is wrong\n");
+			gettimeofday(&end_t, NULL);
+			ssu_runtime(&begin_t, &end_t);
+			printf("\n");
+			return 0;
+		}
+		if(strlen(parser)!=strlen(bone))
+		parser+=strlen(bone);
+	}
+	printf("hour after exceptionhandling:%s\n",hour);
+	//free(parser);
+	//free(parser1);
+
+
+	//hour 예외처리 
+	for(z=0;z<strlen(hour);z++){
+		if(((0x30<=hour[z])&&(hour[z]<=0x39))||hour[z]==0x2A||hour[z]==0x2D||hour[z]==0x2C||hour[z]==0x2F)
+			goodinput=1;
+		else{
+			printf("run cycle input is wrong\n");
+			gettimeofday(&end_t, NULL);
+			ssu_runtime(&begin_t, &end_t);
+			printf("\n");
+			return 0;
+		}
+	}
 	//day 예외처리 
 	for(z=0;z<strlen(day);z++){
 		if(((0x30<=day[z])&&(day[z]<=0x39))||day[z]==0x2A||day[z]==0x2D||day[z]==0x2C||day[z]==0x2F)
@@ -345,6 +398,41 @@ int do_addOpt(char *str) {
 		printf("\n");
 		return 0;
 	}
+	//주기와 같이 쓰였을때 파싱해서 범위벗어난 경우 예외처리 
+	parser=NULL;
+	parser1=NULL;
+	parser2=NULL;
+	printf("day:%s\n",day);
+		parser=strpbrk(day,op);
+	while(day!=NULL){
+		sleep(1);
+		parser1=parser;
+		parser=strpbrk(parser1,op);
+		if(parser==NULL)
+			break;
+		parser++;
+		printf("parser1:%s parser:%s day:%s\n",parser1,parser,day);
+		parser2=strpbrk(parser,op);
+		printf("parser1:%s parser2:%s day:%s\n",parser1,parser2,day);
+		char bone[TIME_SIZE];
+		memset(bone,0,TIME_SIZE);
+		if(parser2!=NULL)
+			strncpy(bone,parser,strlen(parser)-strlen(parser2));
+		else
+			strcpy(bone,parser);
+		printf("bone:%s\n",bone);
+		int boneint=atoi(bone);
+		if(boneint<0||boneint>31){
+			printf("runcycle range is wrong\n");
+			gettimeofday(&end_t, NULL);
+			ssu_runtime(&begin_t, &end_t);
+			printf("\n");
+			return 0;
+		}
+		if(strlen(parser)!=strlen(bone))
+		parser+=strlen(bone);
+	}
+	printf("day after exceptionhandling:%s\n",day);
 	//month 예외처리 
 	for(z=0;z<strlen(month);z++){
 		if(((0x30<=month[z])&&(month[z]<=0x39))||month[z]==0x2A||month[z]==0x2D||month[z]==0x2C||month[z]==0x2F)
@@ -378,6 +466,41 @@ int do_addOpt(char *str) {
 		printf("\n");
 		return 0;
 	}
+	//주기와 같이 쓰였을때 파싱해서 범위벗어난 경우 예외처리 
+	parser=NULL;
+	parser1=NULL;
+	parser2=NULL;
+	printf("month:%s\n",month);
+		parser=strpbrk(month,op);
+	while(month!=NULL){
+		sleep(1);
+		parser1=parser;
+		parser=strpbrk(parser1,op);
+		if(parser==NULL)
+			break;
+		parser++;
+		printf("parser1:%s parser:%s month:%s\n",parser1,parser,month);
+		parser2=strpbrk(parser,op);
+		printf("parser1:%s parser2:%s month:%s\n",parser1,parser2,month);
+		char bone[TIME_SIZE];
+		memset(bone,0,TIME_SIZE);
+		if(parser2!=NULL)
+			strncpy(bone,parser,strlen(parser)-strlen(parser2));
+		else
+			strcpy(bone,parser);
+		printf("bone:%s\n",bone);
+		int boneint=atoi(bone);
+		if(boneint<0||boneint>12){
+			printf("runcycle range is wrong\n");
+			gettimeofday(&end_t, NULL);
+			ssu_runtime(&begin_t, &end_t);
+			printf("\n");
+			return 0;
+		}
+		if(strlen(parser)!=strlen(bone))
+		parser+=strlen(bone);
+	}
+	printf("month after exceptionhandling:%s\n",month);
 	//weekday 예외처리 
 	for(z=0;z<strlen(weekday);z++){
 		if(((0x30<=weekday[z])&&(weekday[z]<=0x39))||weekday[z]==0x2A||weekday[z]==0x2D||weekday[z]==0x2C||weekday[z]==0x2F)
@@ -411,6 +534,41 @@ int do_addOpt(char *str) {
 		printf("\n");
 		return 0;
 	}
+	//주기와 같이 쓰였을때 파싱해서 범위벗어난 경우 예외처리 
+	parser=NULL;
+	parser1=NULL;
+	parser2=NULL;
+	printf("weekday:%s\n",weekday);
+		parser=strpbrk(weekday,op);
+	while(weekday!=NULL){
+		sleep(1);
+		parser1=parser;
+		parser=strpbrk(parser1,op);
+		if(parser==NULL)
+			break;
+		parser++;
+		printf("parser1:%s parser:%s weekday:%s\n",parser1,parser,weekday);
+		parser2=strpbrk(parser,op);
+		printf("parser1:%s parser2:%s weekday:%s\n",parser1,parser2,weekday);
+		char bone[TIME_SIZE];
+		memset(bone,0,TIME_SIZE);
+		if(parser2!=NULL)
+			strncpy(bone,parser,strlen(parser)-strlen(parser2));
+		else
+			strcpy(bone,parser);
+		printf("bone:%s\n",bone);
+		int boneint=atoi(bone);
+		if(boneint<0||boneint>6){
+			printf("runcycle range is wrong\n");
+			gettimeofday(&end_t, NULL);
+			ssu_runtime(&begin_t, &end_t);
+			printf("\n");
+			return 0;
+		}
+		if(strlen(parser)!=strlen(bone))
+		parser+=strlen(bone);
+	}
+	printf("weekday after exceptionhandling:%s\n",weekday);
 
 
 	//명령어 입력 '\n' 개행만날때까지 _명령어는 예외처리 안해도됨 
