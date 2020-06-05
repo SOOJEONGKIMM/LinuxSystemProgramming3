@@ -1,6 +1,7 @@
 #include "./ssu_rsync.h"
 
 int main(int argc, char *argv[]){
+	gettimeofday(&begin_t, NULL);
 	char option[OPT_SIZE];
 	char src[FILE_SIZE];
 	char dst[FILE_SIZE];
@@ -17,6 +18,8 @@ int main(int argc, char *argv[]){
 	if(!strcmp(argv[1],"-r")||!strcmp(argv[1],"-t")||!strcmp(argv[1],"-m")){
 		if(argc!=4){
 			fprintf(stderr,"Usage: %s [option] <src> <dst>\n",argv[0]);
+		gettimeofday(&end_t, NULL);
+		ssu_runtime(&begin_t, &end_t);
 			exit(1);
 		}
 		strcpy(option,argv[1]);
@@ -863,5 +866,18 @@ int rmdirs(const char *path, int force){
 	}
 	closedir(dir_ptr);
 	return rmdir(path);
+}
+
+//실행시간확인 
+void ssu_runtime(struct timeval *begin_t, struct timeval *end_t)
+{
+	end_t->tv_sec -= begin_t->tv_sec;
+
+	if (end_t->tv_usec < begin_t->tv_usec) {
+		end_t->tv_sec--;
+		end_t->tv_usec += SECOND_TO_MICRO;
+	}
+	end_t->tv_usec -= begin_t->tv_usec;
+	printf("Runtime: %ld:%06ld(sec:usec)\n", end_t->tv_sec, end_t->tv_usec);
 }
 

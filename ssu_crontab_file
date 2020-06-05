@@ -1,0 +1,10 @@
+* * * * 6 echo "echo every minute" > echomsg.txt
+1 1-5/2 * * * echo
+1-5/2,6-10/3 * * * * echo
+1 1 1-2 3 */2 echo
+*/5 1 1 1 1 echo
+* * 1 1,2 1-5/2,6-10/3 echo
+* * * * 1,2 echo
+* * * * 1-5/2,8,9-15/3 echo
+8 * * * * echo
+1-5/2,8,9-15/3 * * * * echo

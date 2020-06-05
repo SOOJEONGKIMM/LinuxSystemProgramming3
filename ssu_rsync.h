@@ -1,4 +1,3 @@
-
 #include<stdio.h>
 #include<stdlib.h>
 #include<unistd.h>//getcwd()
@@ -71,3 +70,4 @@ void get_time(char *str);
 void write_rsynclog_timecmd(char *cmdstr);
 void write_rsynclog_files(char *fname, long fsize);
 int rmdirs(const char *path, int force);
+void ssu_runtime(struct timeval *begin_t, struct timeval *end_t);
