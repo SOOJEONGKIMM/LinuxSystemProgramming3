@@ -178,11 +178,11 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 				//start:,6-10/3    end:,6-10/3     token:1-5/2
 				printf("sta:%s  !=  %s ','exists.tok:%s\n",start,end,tokens[row]);//숫자만 존재 
 				int k=0;
-				strcpy(tokens[row],end);
+				//strcpy(tokens[row],end);
 				printf("tokens[0]:%c\n",tokens[row][0]);
 				printf("tokens[1]:%c\n",tokens[row][1]);
 				printf("1tokens:%s\n",tokens[row]);
-				if(tokens[row][0]==','){
+				/*if(tokens[row][0]==','){
 					for(k=0;tokens[row][k];k++){
 						tokens[row][k]=tokens[row][k+1];
 					}
@@ -190,6 +190,14 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 				strcpy(start,tokens[row]);
 				if(commacnt!=1)
 					end=strpbrk(start,comma);//','기호로 나누기 
+				}*/
+				if(strstr(tokens[row],",")!=NULL){
+					printf("파싱후 tok업데이트 tok:%s ,end:%s\n",tokens[row],end);
+					char tokbackup[TOKEN_CNT];
+					int toklen=strlen(tokens[row]);
+					strcpy(tokbackup,tokens[row]);
+					memset(tokens[row],0,TOKEN_CNT);
+					strncpy(tokens[row],tokbackup,toklen-strlen(end));
 				}
 				printf("'/'주기기호 strstr전에 tokens[%d]:%s\n",row,tokens[row]);
 				//'/'주기기호가 존재한다면 
@@ -198,11 +206,12 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 					char startbackup[BUFFER_SIZE];
 					strcpy(startbackup,start);
 					printf("'/'기호존재before parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
-					strcpy(tokens[row],end);
+					//strcpy(tokens[row],end);
 					parse_calcul(tokens,startbackup,end,itemcnt,cntslash);
 					printf("cntnum:%d\n",cntnum);
 					strcpy(end,end+1);
-					printf("'/'기호존재after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
+					printf("'/'기호존재after parse calcul tok:%s startbackup:%s end:%s cntslash:%d\n",tokens[row],startbackup,end,cntslash[row]);
+					start++;
 					strcpy(tokens[row],end);
 				}
 				else {
@@ -220,6 +229,7 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 					printf("숫자만after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 					for(int i=0;i<cntnum;i++)
 						printf("%d에 저장\n",cntslash[i]);
+					//start++;end++;
 					strcpy(tokens[row],end);
 					printf("숫자만작업완료after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 				}
@@ -277,7 +287,7 @@ void parse_calcul(char tokens[TOKEN_CNT][MINLEN],char *start,char *end,int itemc
 	int i;
 	//'/'주기 기호로 나누기 
 	end=strpbrk(tokens[row],slash);
-	//strcpy(start,tokens[row]);
+	strcpy(start,tokens[row]);
 	//start:1-5/2 end:/2  tok:1-5/2
 	printf("slash start:%s end:%s tok:%s\n",start,end,tokens[row]);
 	strncpy(tokens[row+1],start,strlen(start)-strlen(end));
