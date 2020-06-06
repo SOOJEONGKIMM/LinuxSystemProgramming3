@@ -152,8 +152,8 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 	else if(!strcmp(start,"*")&&strlen(start)==1)//독립적'*'
 		printf("%s %s is '*'str:%s",start,end,str);
 	else{
-	/*	end=strpbrk(start,comma);//','기호로 나누기 
-		if(start==end)//','기호가 없는 경우
+		/*	end=strpbrk(start,comma);//','기호로 나누기 
+			if(start==end)//','기호가 없는 경우
 			printf("%s %s no ',' exist.str:%s",start,end,str);*/
 		//','주기기호가 존재한다면 
 		if(strstr(start,",")!=NULL){
@@ -177,18 +177,33 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 				}
 				//start:,6-10/3    end:,6-10/3     token:1-5/2
 				printf("sta:%s  !=  %s ','exists.tok:%s\n",start,end,tokens[row]);//숫자만 존재 
+				int k=0;
+				strcpy(tokens[row],end);
+				printf("tokens[0]:%c\n",tokens[row][0]);
+				printf("tokens[1]:%c\n",tokens[row][1]);
+				printf("1tokens:%s\n",tokens[row]);
+				if(tokens[row][0]==','){
+					for(k=0;tokens[row][k];k++){
+						tokens[row][k]=tokens[row][k+1];
+					}
+				strcpy(end,tokens[row]);
+				strcpy(start,tokens[row]);
+				if(commacnt!=1)
+					end=strpbrk(start,comma);//','기호로 나누기 
+				}
+				printf("'/'주기기호 strstr전에 tokens[%d]:%s\n",row,tokens[row]);
 				//'/'주기기호가 존재한다면 
 				if(strstr(tokens[row],"/")!=NULL){
 					printf("','기호와 '/'기호 모두 존재\n");
 					char startbackup[BUFFER_SIZE];
 					strcpy(startbackup,start);
-					printf("before parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
+					printf("'/'기호존재before parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
+					strcpy(tokens[row],end);
 					parse_calcul(tokens,startbackup,end,itemcnt,cntslash);
 					printf("cntnum:%d\n",cntnum);
 					strcpy(end,end+1);
+					printf("'/'기호존재after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 					strcpy(tokens[row],end);
-					printf("after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
-	clear_tokens(tokens);
 				}
 				else {
 					//숫자만 있는 경우 
@@ -197,18 +212,20 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 
 					printf("','기호만 존재하고 '/'주기기호는 없음\n");
 					char startbackup[BUFFER_SIZE];
-					printf("herebefore parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
+					printf("숫자만before parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 					int endint=atoi(tokens[row]);
 					cntslash[cntnum]=endint;
 					cntnum++;
 					printf("cntnum:%d\n",cntnum);
-					strcpy(tokens[row],end);
-					printf("hereafter parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
+					printf("숫자만after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 					for(int i=0;i<cntnum;i++)
 						printf("%d에 저장\n",cntslash[i]);
+					strcpy(tokens[row],end);
+					printf("숫자만작업완료after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 				}
 
 				commacnt--;
+				//row++;
 			}//','기호개수만큼 while루프돌고 끝 
 		}//','기호 있는 경우끝
 		else{//','기호 없는 경우 시작 
@@ -246,17 +263,21 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 		}//','기호 없는 경우 끝 
 
 	}//숫자only랑 독자적'*'제외 케이스들 끝 
+	printf("====================================================\n");
+	for(int i=0;i<cntnum;i++)
+		printf("모두완료.index%d에 %d저장\n",i,cntslash[i]);
 }
 void parse_calcul(char tokens[TOKEN_CNT][MINLEN],char *start,char *end,int itemcnt,int *savebuf){
 	printf("parse_calcul called\n");
 	char *comma=",";
 	char *slash="/";
+	char *commaslash=",/";
 	char *bar="-";
 	int row=0;
 	int i;
 	//'/'주기 기호로 나누기 
 	end=strpbrk(tokens[row],slash);
-	strcpy(start,tokens[row]);
+	//strcpy(start,tokens[row]);
 	//start:1-5/2 end:/2  tok:1-5/2
 	printf("slash start:%s end:%s tok:%s\n",start,end,tokens[row]);
 	strncpy(tokens[row+1],start,strlen(start)-strlen(end));
@@ -325,7 +346,7 @@ void count_slash(char *cnt, char *slash, int *savebuf,int itemcnt){
 	while(Itemcnt){
 		startcnt+=slashINT;
 		printf("st:%d\n",startcnt);
-		if(Itemcnt<=startcnt)
+		if(Itemcnt<startcnt)
 			break;
 		savebuf[cntnum]=startcnt;
 		printf("save[%d]:%d\n",cntnum,savebuf[cntnum]);
