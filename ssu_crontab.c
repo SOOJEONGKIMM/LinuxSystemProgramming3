@@ -111,6 +111,8 @@ void ssu_runtime(struct timeval *begin_t, struct timeval *end_t)
 int do_addOpt(char *str) {
 	gettimeofday(&begin_t, NULL);
 	char *op=",-*/";
+	char slash='/';
+	char bar='-';
 
 
 
@@ -246,8 +248,23 @@ int do_addOpt(char *str) {
 	char *parser=NULL;
 	char *parser1=NULL;
 	char *parser2=NULL;
+	char opbuf[TMP_SIZE];
+	memset(opbuf,0,TMP_SIZE);
 	printf("min:%s\n",min);
-		parser=strpbrk(min,op);
+	int p=0;
+	parser1=min;
+	parser=strpbrk(min,op);
+	opbuf[p]=parser[0];
+	if(opbuf[p]==slash){
+					printf("runcycle range is wrong(not 'range/number')\n");
+					gettimeofday(&end_t, NULL);
+					ssu_runtime(&begin_t, &end_t);
+					printf("\n");
+					return 0;
+				}
+
+	p++;
+	int q=0;
 	while(min!=NULL){
 		sleep(1);
 		parser1=parser;
@@ -258,14 +275,29 @@ int do_addOpt(char *str) {
 		printf("parser1:%s parser:%s min:%s\n",parser1,parser,min);
 		parser2=strpbrk(parser,op);
 		printf("parser1:%s parser2:%s min:%s\n",parser1,parser2,min);
-		char bone[TIME_SIZE];
-		memset(bone,0,TIME_SIZE);
-		if(parser2!=NULL)
-			strncpy(bone,parser,strlen(parser)-strlen(parser2));
+		char bone[TIME_SIZE][TIME_SIZE];
+		//memset(bone,0,TIME_SIZE);
+		if(parser2!=NULL){
+			strncpy(bone[q],parser,strlen(parser)-strlen(parser2));
+			opbuf[p]=parser2[0];
+			printf("opbuf[%d]:%c\n",p,opbuf[p]);
+			if(parser2[0]=='/'){
+				printf("slash...\n");
+				printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
+				if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
+					printf("runcycle range is wrong(not 'range/number')\n");
+					gettimeofday(&end_t, NULL);
+					ssu_runtime(&begin_t, &end_t);
+					printf("\n");
+					return 0;
+				}
+			}
+		}
 		else
-			strcpy(bone,parser);
-		printf("bone:%s\n",bone);
-		int boneint=atoi(bone);
+			strcpy(bone[q],parser);
+		printf("bone[%d]:%s\n",q,bone[q]);
+		int boneint=atoi(bone[q]);
+		printf("boneint:%d\n",boneint);
 		if(boneint<0||boneint>59){
 			printf("runcycle range is wrong\n");
 			gettimeofday(&end_t, NULL);
@@ -273,8 +305,9 @@ int do_addOpt(char *str) {
 			printf("\n");
 			return 0;
 		}
-		if(strlen(parser)!=strlen(bone))
-		parser+=strlen(bone);
+		if(strlen(parser)!=strlen(bone[q]))
+			parser+=strlen(bone[q]);
+		q++;p++;
 	}
 	printf("min after exceptionhandling:%s\n",min);
 	//free(parser);
@@ -319,7 +352,7 @@ int do_addOpt(char *str) {
 	parser1=NULL;
 	parser2=NULL;
 	printf("hour:%s\n",hour);
-		parser=strpbrk(hour,op);
+	parser=strpbrk(hour,op);
 	while(hour!=NULL){
 		sleep(1);
 		parser1=parser;
@@ -346,7 +379,7 @@ int do_addOpt(char *str) {
 			return 0;
 		}
 		if(strlen(parser)!=strlen(bone))
-		parser+=strlen(bone);
+			parser+=strlen(bone);
 	}
 	printf("hour after exceptionhandling:%s\n",hour);
 	//free(parser);
@@ -403,7 +436,7 @@ int do_addOpt(char *str) {
 	parser1=NULL;
 	parser2=NULL;
 	printf("day:%s\n",day);
-		parser=strpbrk(day,op);
+	parser=strpbrk(day,op);
 	while(day!=NULL){
 		sleep(1);
 		parser1=parser;
@@ -430,7 +463,7 @@ int do_addOpt(char *str) {
 			return 0;
 		}
 		if(strlen(parser)!=strlen(bone))
-		parser+=strlen(bone);
+			parser+=strlen(bone);
 	}
 	printf("day after exceptionhandling:%s\n",day);
 	//month 抗寇贸府 
@@ -471,7 +504,7 @@ int do_addOpt(char *str) {
 	parser1=NULL;
 	parser2=NULL;
 	printf("month:%s\n",month);
-		parser=strpbrk(month,op);
+	parser=strpbrk(month,op);
 	while(month!=NULL){
 		sleep(1);
 		parser1=parser;
@@ -498,7 +531,7 @@ int do_addOpt(char *str) {
 			return 0;
 		}
 		if(strlen(parser)!=strlen(bone))
-		parser+=strlen(bone);
+			parser+=strlen(bone);
 	}
 	printf("month after exceptionhandling:%s\n",month);
 	//weekday 抗寇贸府 
@@ -539,7 +572,7 @@ int do_addOpt(char *str) {
 	parser1=NULL;
 	parser2=NULL;
 	printf("weekday:%s\n",weekday);
-		parser=strpbrk(weekday,op);
+	parser=strpbrk(weekday,op);
 	while(weekday!=NULL){
 		sleep(1);
 		parser1=parser;
@@ -566,7 +599,7 @@ int do_addOpt(char *str) {
 			return 0;
 		}
 		if(strlen(parser)!=strlen(bone))
-		parser+=strlen(bone);
+			parser+=strlen(bone);
 	}
 	printf("weekday after exceptionhandling:%s\n",weekday);
 
