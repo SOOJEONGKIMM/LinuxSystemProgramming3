@@ -15,7 +15,8 @@
 
 #define SECOND_TO_MICRO 1000000
 #define BUFFER_SIZE 1024
-#define TIME_SIZE 64
+#define TIME_SIZE 256
+#define TMP_SIZE 528
 
 struct timeval begin_t, end_t;
 

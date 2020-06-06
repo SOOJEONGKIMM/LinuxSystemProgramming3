@@ -15,24 +15,39 @@
 
 #define SECOND_TO_MICRO 1000000
 #define BUFFER_SIZE 1024
-#define TIME_SIZE 16
+#define TIME_SIZE 128
 #define TOKEN_CNT 50
 #define MINLEN 64
+#define MAXTIME 256
 
 #define MIN_ITEM 59
 #define HOUR_ITEM 23
 #define DAY_ITEM 31
 #define MONTH_ITEM 12
 #define WEEKDAY_ITEM 6
+pthread_mutex_t mutex;
+
+typedef struct _crondtime{
+	pthread_t t_id;
+	int min_crond[MAXTIME];
+	int hour_crond[MAXTIME];
+	int day_crond[MAXTIME];
+	int month_crond[MAXTIME];
+	int weekday_crond[MAXTIME];
+//	struct _crondtime *next;
+}CT;
+//Node *head;
 
 struct timeval begin_t, end_t;
 
 void read_cronfile();
 void read_timecmd(char *str);
 int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt);
+void deliver_crondtime(int *savebuf, int itemcnt,int cntnum);
 void count_slash_withbar(char *startcnt, char *endcnt, char *slash, int *savebuf);
 void count_slash(char *cnt, char *slash, int *savebuf,int itemcnt);
 void parse_calcul(char tokens[TOKEN_CNT][MINLEN],char *start,char *end,int itemcnt,int *savebuf);
 void clear_tokens(char tokens[TOKEN_CNT][MINLEN]);
 void calcultime(char *timestr);
 void startdaemon();
+//void list_insert(Node *newNode);

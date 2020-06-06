@@ -1,6 +1,8 @@
 #include "./ssu_crond.h"
 int cntnum=0;
 int main(void){
+	if(pthread_mutex_init(&mutex,NULL)!=0)
+		fprintf(stderr,"mutex init error\n");
 	read_cronfile();
 	return 0;
 }
@@ -27,6 +29,11 @@ void read_cronfile(){
 	fclose(fp);
 
 } 
+void pthread_cmd(){
+	pthread_t t_id;//thread id
+
+//	if(pthread_create(
+}
 void read_timecmd(char *str){
 	//실행주기 명령어 입력받는 코드
 	//실행주기 입력: *'\0'*'\0'*'\0'*'\0'*'\0' 공백 다섯번째까지 
@@ -147,10 +154,24 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 	printf("처음 연산자 토큰%s %s 길이:%ld\n",start,end,strlen(start));
 
 	//기호 없이 숫자만 존재 
-	if(end==NULL&&(strstr(start,"*")==NULL))
+	if(end==NULL&&(strstr(start,"*")==NULL)){
 		printf("%s  ==  %s only numbers\n",start,end);//숫자만 존재 
-	else if(!strcmp(start,"*")&&strlen(start)==1)//독립적'*'
+		cntnum=1;
+		int isol_num=atoi(start);
+		cntslash[0]=isol_num;
+	}
+	else if(!strcmp(start,"*")&&strlen(start)==1){//독립적'*'
 		printf("%s %s is '*'str:%s",start,end,str);
+		cntnum=itemcnt;
+		if(itemcnt==MIN_ITEM||itemcnt==HOUR_ITEM||itemcnt==WEEKDAY_ITEM){
+			for(i=0;i<=itemcnt;i++)
+				cntslash[i]=i;
+		}
+		else if(itemcnt==DAY_ITEM||itemcnt==MONTH_ITEM){
+			for(i=0;i<itemcnt;i++)
+				cntslash[i]=i+1;
+		}
+	}
 	else{
 		/*	end=strpbrk(start,comma);//','기호로 나누기 
 			if(start==end)//','기호가 없는 경우
@@ -160,37 +181,32 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 			//','기호 개수 세기 
 			for(i=0;start[i];i++)
 				if(start[i]==',')commacnt++;
-			printf("commacnt:%d\n",commacnt);
+			//printf("commacnt:%d\n",commacnt);
 			//start:1-5/2,6-10/3    end:,6-10/3     
-			printf("start:%s  !=  %s ','exists.str:%s\n",start,end,str);//숫자만 존재 
+			//printf("start:%s  !=  %s ','exists.str:%s\n",start,end,str);//숫자만 존재 
 			//','기호 토큰 나눠주기
 			commacnt++;
 			while(commacnt){
 				if(commacnt!=1)
 					end=strpbrk(start,comma);//','기호로 나누기 
 				while(start<end){
-					printf("POOOOOINTER: *st:%d %s\n",*start,start);
-					printf("PLAY start:%s  !=  %s ','exists.tok:%s\n",start,end,tokens[row]);//숫자만 존재 
 					if(*start!=' ')
 						strncat(tokens[row],start,1);
 					start++;
 				}
 				//start:,6-10/3    end:,6-10/3     token:1-5/2
-				printf("sta:%s  !=  %s ','exists.tok:%s\n",start,end,tokens[row]);//숫자만 존재 
+				//printf("sta:%s  !=  %s ','exists.tok:%s\n",start,end,tokens[row]);//숫자만 존재 
 				int k=0;
 				//strcpy(tokens[row],end);
-				printf("tokens[0]:%c\n",tokens[row][0]);
-				printf("tokens[1]:%c\n",tokens[row][1]);
-				printf("1tokens:%s\n",tokens[row]);
 				/*if(tokens[row][0]==','){
-					for(k=0;tokens[row][k];k++){
-						tokens[row][k]=tokens[row][k+1];
-					}
-				strcpy(end,tokens[row]);
-				strcpy(start,tokens[row]);
-				if(commacnt!=1)
-					end=strpbrk(start,comma);//','기호로 나누기 
-				}*/
+				  for(k=0;tokens[row][k];k++){
+				  tokens[row][k]=tokens[row][k+1];
+				  }
+				  strcpy(end,tokens[row]);
+				  strcpy(start,tokens[row]);
+				  if(commacnt!=1)
+				  end=strpbrk(start,comma);//','기호로 나누기 
+				  }*/
 				if(strstr(tokens[row],",")!=NULL){
 					printf("파싱후 tok업데이트 tok:%s ,end:%s\n",tokens[row],end);
 					char tokbackup[TOKEN_CNT];
@@ -274,8 +290,53 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 
 	}//숫자only랑 독자적'*'제외 케이스들 끝 
 	printf("====================================================\n");
-	for(int i=0;i<cntnum;i++)
+	for(int i=0;i<=cntnum+2;i++)
 		printf("모두완료.index%d에 %d저장\n",i,cntslash[i]);
+	deliver_crondtime(cntslash,itemcnt,cntnum);
+}
+void deliver_crondtime(int *savebuf, int itemcnt,int cntnum){
+	int i;
+	CT CT;
+	/*Node *node=(Node*)malloc(sizeof(Node));
+	memset(node,0,sizeof(node));
+	node=head;
+	*/
+	if(itemcnt==MIN_ITEM){
+		for(i=0;i<=cntnum;i++){
+			CT.min_crond[i]=savebuf[i];
+		}
+	}
+	if(itemcnt==HOUR_ITEM){
+		for(i=0;i<=cntnum;i++){
+			CT.hour_crond[i]=savebuf[i];
+		}
+	}
+	if(itemcnt==DAY_ITEM){
+		for(i=0;i<=cntnum;i++)
+			CT.day_crond[i]=savebuf[i];
+	}
+	if(itemcnt==MONTH_ITEM){
+		for(i=0;i<=cntnum;i++)
+			CT.month_crond[i]=savebuf[i];
+	}
+	if(itemcnt==WEEKDAY_ITEM){
+		for(i=0;i<=cntnum;i++)
+			CT.weekday_crond[i]=savebuf[i];
+	}
+	//list_insert(node);
+
+	for(i=0;i<=MIN_ITEM;i++)
+		printf("min deliver 작업중....index%d에 %d저장\n",i,CT.min_crond[i]);
+	for(i=0;i<=HOUR_ITEM;i++)
+		printf("hour deliver 작업중....index%d에 %d저장\n",i,CT.hour_crond[i]);
+	for(i=0;i<=DAY_ITEM;i++)
+		printf("daydeliver 작업중....index%d에 %d저장\n",i,CT.day_crond[i]);
+	for(i=0;i<=MONTH_ITEM;i++)
+		printf("month deliver 작업중....index%d에 %d저장\n",i,CT.month_crond[i]);
+	for(i=0;i<=WEEKDAY_ITEM;i++)
+		printf("weekday deliver 작업중....index%d에 %d저장\n",i,CT.weekday_crond[i]);
+	
+
 }
 void parse_calcul(char tokens[TOKEN_CNT][MINLEN],char *start,char *end,int itemcnt,int *savebuf){
 	printf("parse_calcul called\n");
@@ -419,5 +480,17 @@ void startdaemon(){
 
 	}
 }
-
-
+/*
+void list_insert(Node *newNode){
+	newNode->next=NULL;
+	if(head=NULL)
+		head=newNode;
+	else{
+		Node *search;
+		search=head;
+		while(search->next!=NULL)
+			search=search->next;
+		search->next=newNode;
+	}
+}
+*/

@@ -4,3 +4,4 @@ srcsub2/srcsub2file 44bytes
 srcsub2/sub3 4096bytes
 srcsub2/sub3/srcsub3file 44bytes
 [Thu Jun  4 03:00:25 2020] ssu_rsync ./ ../
+srcdir 4096bytes
