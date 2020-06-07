@@ -1,19 +1,31 @@
 #include "./ssu_crond.h"
+int update=0;
 int cntnum=0;
+
 int main(void){
 	if(pthread_mutex_init(&mutex,NULL)!=0)
 		fprintf(stderr,"mutex init error\n");
 	read_cronfile();
-/*	while(1){
+
+	while(1){
 		sleep(2);
-		check_cronfile();
-	}*/
+		/*check_cronfile();
+
+		//ssu_crontab()에서 add나 remove된경우 
+		if(update==1){
+		read_cronfile();
+		update=0;
+		}*/
+		pthread_cmd();
+	}
 	return 0;
 }
 void read_cronfile(){
 	//ssu_crontab_file에서 주기가져옴  
 	FILE *fp;
 	char *cronfile="ssu_crontab_file";
+	//변동있는 경우 업데이트되므로 초기화
+	memset(readcrondfile,0,sizeof(readcrondfile));
 
 	if((fp=fopen(cronfile,"r"))<0){
 		fprintf(stderr,"fopen error for %s\n",cronfile);
@@ -40,6 +52,8 @@ void check_cronfile(){
 	//ssu_crontab_file에서 주기가져옴  
 	FILE *fp;
 	char *cronfile="ssu_crontab_file";
+	//한번 읽을때마다 초기화
+	memset(checkcrondfile,0,sizeof(checkcrondfile));
 
 	if((fp=fopen(cronfile,"r"))<0){
 		fprintf(stderr,"fopen error for %s\n",cronfile);
@@ -63,28 +77,52 @@ void check_cronfile(){
 }
 //read_cronfile과 check_cronfile 비교(변동이 있는지 판별) (무한반복)
 void compare_cronfile(){
+	int origincnt=0, checkcnt=0;
+	while(checkcrondfile[checkcnt]!=NULL||readcrondfile[origincnt]!=NULL)
+		checkcnt++;origincnt++;
+	//remove된경우 
+	if(checkcnt<origincnt){
+		update=1;
+		printf("removed..\n");
+	}
 
-
+	//add된경우 
+	if(origincnt<checkcnt){
+		update=1;
+		printf("added...\n");
+	}
 
 
 }
-void pthread_cmd(){
-	pthread_t t_id;//thread id
-	CT CT;
-	int i;
-	for(i=0;i<=MIN_ITEM;i++)
-		printf("min deliver 작업중....index%d에 %d저장\n",i,CT.min_crond[i]);
-	for(i=0;i<=HOUR_ITEM;i++)
-		printf("hour deliver 작업중....index%d에 %d저장\n",i,CT.hour_crond[i]);
-	for(i=0;i<=DAY_ITEM;i++)
-		printf("daydeliver 작업중....index%d에 %d저장\n",i,CT.day_crond[i]);
-	for(i=0;i<=MONTH_ITEM;i++)
-		printf("month deliver 작업중....index%d에 %d저장\n",i,CT.month_crond[i]);
-	for(i=0;i<=WEEKDAY_ITEM;i++)
-		printf("weekday deliver 작업중....index%d에 %d저장\n",i,CT.weekday_crond[i]);
-	
+//현재시간 계속 가져옴(무한반복)_주기계산의 시간과 일치확인용 
+void get_localtime(char *timestr){
+	time_t timer=time(NULL);
+	struct tm *t=localtime(&timer);
 
-//	if(pthread_create(
+	memset(timestr,0,TIME_SIZE);
+	sprintf(timestr,"%02d-%02d-%02d-%02d-%02d\n",t->tm_min,t->tm_hour,t->tm_mday,t->tm_mon+1,t->tm_wday);
+	printf("localtime: %s",timestr);
+}
+
+void pthread_cmd(){
+	char timestr[TIME_SIZE];//localtime
+	pthread_t t_id;//thread id
+	int i;
+	/*	for(i=0;i<=MIN_ITEM;i++)
+		printf("min deliver 작업중....index%d에 %d저장\n",i,min_crond[i]);
+		for(i=0;i<=HOUR_ITEM;i++)
+		printf("hour deliver 작업중....index%d에 %d저장\n",i,hour_crond[i]);
+		for(i=0;i<=DAY_ITEM;i++)
+		printf("daydeliver 작업중....index%d에 %d저장\n",i,day_crond[i]);
+		for(i=0;i<=MONTH_ITEM;i++)
+		printf("month deliver 작업중....index%d에 %d저장\n",i,month_crond[i]);
+		for(i=0;i<=WEEKDAY_ITEM;i++)
+		printf("weekday deliver 작업중....index%d에 %d저장\n",i,weekday_crond[i]);
+	 */
+	get_localtime(timestr);
+
+
+	//	if(pthread_create(
 }
 void read_timecmd(char *str){
 	//실행주기 명령어 입력받는 코드
@@ -114,7 +152,6 @@ void read_timecmd(char *str){
 		i++;
 	}
 	make_tokens(min,tokens,MIN_ITEM);
-	//calcultime(min);
 	printf("min:%s\n",min);
 	cntnum=0;
 	//hour
@@ -128,7 +165,6 @@ void read_timecmd(char *str){
 		i++;
 	}
 	make_tokens(hour,tokens,HOUR_ITEM);
-	//calcultime(hour);
 	printf("hour:%s\n",hour);
 	cntnum=0;
 	//day
@@ -142,7 +178,6 @@ void read_timecmd(char *str){
 		i++;
 	}
 	make_tokens(day,tokens,DAY_ITEM);
-	//calcultime(day);
 	printf("day:%s\n",day);
 	cntnum=0;
 	//month
@@ -156,7 +191,6 @@ void read_timecmd(char *str){
 		i++;
 	}
 	make_tokens(month,tokens,MONTH_ITEM);
-	//calcultime(month);
 	printf("month:%s\n",month);
 	cntnum=0;
 	//weekday
@@ -170,7 +204,6 @@ void read_timecmd(char *str){
 		i++;
 	}
 	make_tokens(weekday,tokens,WEEKDAY_ITEM);
-	//calcultime(weekday);
 	printf("weekday:%s\n",weekday);
 	cntnum=0;
 	//명령어 입력 '\n' 개행만날때까지 _명령어는 예외처리 안해도됨 
@@ -184,6 +217,7 @@ void read_timecmd(char *str){
 		i++;
 	}
 	printf("sys:%s\n",syscmd);
+	make_systimebuf(syscmd);
 
 
 }
@@ -238,6 +272,7 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 			//printf("start:%s  !=  %s ','exists.str:%s\n",start,end,str);//숫자만 존재 
 			//','기호 토큰 나눠주기
 			commacnt++;
+			int commanum=commacnt;
 			while(commacnt){
 				if(commacnt!=1)
 					end=strpbrk(start,comma);//','기호로 나누기 
@@ -259,6 +294,7 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 				  if(commacnt!=1)
 				  end=strpbrk(start,comma);//','기호로 나누기 
 				  }*/
+				printf("'/'주기기호 파싱전에 tokens[%d]:%s\n",row,tokens[row]);
 				if(strstr(tokens[row],",")!=NULL){
 					printf("파싱후 tok업데이트 tok:%s ,end:%s\n",tokens[row],end);
 					char tokbackup[TOKEN_CNT];
@@ -275,11 +311,31 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 					strcpy(startbackup,start);
 					printf("'/'기호존재before parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 					//strcpy(tokens[row],end);
+					if(commacnt!=commanum)
+						cntnum++;
 					parse_calcul(tokens,startbackup,end,itemcnt,cntslash);
 					printf("cntnum:%d\n",cntnum);
 					strcpy(end,end+1);
 					printf("'/'기호존재after parse calcul tok:%s startbackup:%s end:%s cntslash:%d\n",tokens[row],startbackup,end,cntslash[row]);
 					start++;
+					strcpy(tokens[row],end);
+				}
+				else if(strstr(tokens[row],"/")==NULL&&strstr(tokens[row],"-")!=NULL){
+					//숫자-숫자 
+					printf("계산전 bar start:%s end:%s tok:%s\n",start,end,tokens[row]); 
+					printf("숫자-숫자 계산중..\n");
+					end=strpbrk(tokens[row],bar);
+					//strcpy(tokens[row],start);
+					printf("bar start:%s end:%s tok:%s\n",start,end,tokens[row]); 
+					strncpy(tokens[row+3],tokens[row],strlen(tokens[row])-strlen(end));
+					strcpy(end,end+1);//trim '-'
+					strncpy(tokens[row+4],end,strlen(end));
+					printf("tokens[row+3]:%s\n",tokens[row+3]);//1   1부터
+					printf("tokens[row+4]:%s\n",tokens[row+4]);//5   5까지 
+
+					if(commacnt!=commanum)
+						cntnum++;
+					count_withbar(tokens[row+3],tokens[row+4],cntslash);
 					strcpy(tokens[row],end);
 				}
 				else {
@@ -291,14 +347,16 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 					char startbackup[BUFFER_SIZE];
 					printf("숫자만before parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 					int endint=atoi(tokens[row]);
-					cntnum++;
+					if(commacnt!=commanum)
+						cntnum++;
 					cntslash[cntnum]=endint;
 					printf("cntnum:%d\n",cntnum);
 					printf("숫자만after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 					for(int i=0;i<=cntnum;i++)
 						printf("%d에 저장\n",cntslash[i]);
 					//start++;end++;
-					strcpy(tokens[row],end);
+					memset(tokens[row],0,sizeof(tokens[row]));
+					//strcpy(tokens[row],end);
 					printf("숫자만작업완료after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 				}
 
@@ -339,18 +397,18 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 					count_slash(tokens[row+1],tokens[row+2],cntslash,itemcnt);
 			}
 			else if(strstr(start,"/")==NULL&&strstr(start,"-")!=NULL){
-					printf("계산전 bar start:%s end:%s tok:%s\n",start,end,tokens[row]); 
-	printf("숫자-숫자 계산중..\n");
+				printf("계산전 bar start:%s end:%s tok:%s\n",start,end,tokens[row]); 
+				printf("숫자-숫자 계산중..\n");
 				end=strpbrk(start,bar);
 				strcpy(tokens[row],start);
-					printf("bar start:%s end:%s tok:%s\n",start,end,tokens[row]); 
-					strncpy(tokens[row+3],start,strlen(start)-strlen(end));
-					strcpy(end,end+1);//trim '-'
-					strncpy(tokens[row+4],end,strlen(end));
-					printf("tokens[row+3]:%s\n",tokens[row+3]);//1   1부터
-					printf("tokens[row+4]:%s\n",tokens[row+4]);//5   5까지 
+				printf("bar start:%s end:%s tok:%s\n",start,end,tokens[row]); 
+				strncpy(tokens[row+3],start,strlen(start)-strlen(end));
+				strcpy(end,end+1);//trim '-'
+				strncpy(tokens[row+4],end,strlen(end));
+				printf("tokens[row+3]:%s\n",tokens[row+3]);//1   1부터
+				printf("tokens[row+4]:%s\n",tokens[row+4]);//5   5까지 
 
-count_withbar(tokens[row+3],tokens[row+4],cntslash);
+				count_withbar(tokens[row+3],tokens[row+4],cntslash);
 			}
 
 		}//','기호 없는 경우 끝 
@@ -361,40 +419,75 @@ count_withbar(tokens[row+3],tokens[row+4],cntslash);
 		printf("모두완료.index%d에 %d저장\n",i,cntslash[i]);
 	deliver_crondtime(cntslash,itemcnt,cntnum);
 }
+//구조체배열에 저장 
 void deliver_crondtime(int *savebuf, int itemcnt,int cntnum){
 	int i;
-	CT CT;
-	/*Node *node=(Node*)malloc(sizeof(Node));
-	memset(node,0,sizeof(node));
-	node=head;
-	*/
+
+	printf("delivering..cntnum:%d\n",cntnum);
+
 	if(itemcnt==MIN_ITEM){
+		mincnt=cntnum;
 		for(i=0;i<=cntnum;i++){
-			CT.min_crond[i]=savebuf[i];
+			min_crond[i]=savebuf[i];
 		}
 	}
 	if(itemcnt==HOUR_ITEM){
+		hourcnt=cntnum;
 		for(i=0;i<=cntnum;i++){
-			CT.hour_crond[i]=savebuf[i];
+			hour_crond[i]=savebuf[i];
+			printf("debug hour:%d\n",hour_crond[i]);
 		}
 	}
 	if(itemcnt==DAY_ITEM){
 		for(i=0;i<=cntnum;i++)
-			CT.day_crond[i]=savebuf[i];
+			day_crond[i]=savebuf[i];
+		daycnt=cntnum;
 	}
 	if(itemcnt==MONTH_ITEM){
+		monthcnt=cntnum;
 		for(i=0;i<=cntnum;i++)
-			CT.month_crond[i]=savebuf[i];
+			month_crond[i]=savebuf[i];
 	}
 	if(itemcnt==WEEKDAY_ITEM){
+		weekdaycnt=cntnum;
 		for(i=0;i<=cntnum;i++)
-			CT.weekday_crond[i]=savebuf[i];
+			weekday_crond[i]=savebuf[i];
 	}
-	//list_insert(node);
 
-	
+	//list_insert(node);
+	//printf("delivering..buf:%ls %ls %ls %ls %ls\n",CT.min_crond,CT.hour_crond,CT.day_crond,CT.month_crond,CT.weekday_crond);
+
+
+
 
 }
+void make_systimebuf(char *syscmd){
+	int i=0;
+	Node *node=(Node*)malloc(sizeof(Node));
+	memset(node,0,sizeof(node));
+	printf("arrived here\n");
+	char timestr[BUFFER_SIZE];
+	memset(timestr,0,BUFFER_SIZE);
+	for(int a=0;a<mincnt;a++){
+		for(int b=0;b<hourcnt;b++){
+			for(int c=0;c<daycnt;c++){
+				for(int d=0;d<monthcnt;d++){
+					for(int e=0;e<weekdaycnt;e++){
+
+						sprintf(node->timebuf[i],"%02d-%02d-%02d-%02d-%02d\n",min_crond[a],hour_crond[b],day_crond[c],month_crond[d],weekday_crond[e]);
+						printf("made timestr:%s\n",node->timebuf[i]);
+						i++;
+					}
+				}
+			}
+		}
+	}
+	strcpy(node->sysbuf,syscmd);
+	list_insert(node);
+
+
+}
+
 void parse_calcul(char tokens[TOKEN_CNT][MINLEN],char *start,char *end,int itemcnt,int *savebuf){
 	printf("parse_calcul called\n");
 	char *comma=",";
@@ -472,7 +565,7 @@ void count_withbar(char *startcnt, char *endcnt, int *savebuf){
 	for(int i=0;i<=cntnum;i++)
 		printf("%d에 저장\n",savebuf[i]);
 }
-	
+
 //  */주기 계산
 void count_slash(char *cnt, char *slash, int *savebuf,int itemcnt){
 	int Itemcnt=itemcnt;
@@ -557,17 +650,28 @@ void startdaemon(){
 
 	}
 }
-/*
-void list_insert(Node *newNode){
-	newNode->next=NULL;
-	if(head=NULL)
-		head=newNode;
+
+void list_insert(Node *newnode){
+	newnode->next=NULL;
+	if(head==NULL)
+		head=newnode;
 	else{
 		Node *search;
 		search=head;
 		while(search->next!=NULL)
 			search=search->next;
-		search->next=newNode;
+		search->next=newnode;
 	}
 }
-*/
+void list_print(){
+	Node *node;
+	node=head;
+	int i=0;
+	while(node){
+		while(node->timebuf[i]!=NULL){
+			printf("delivering..timebuf:%s %s\n",node->timebuf[i],node->sysbuf);
+			i++;
+		}
+		node=node->next;
+	}
+}

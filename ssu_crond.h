@@ -30,25 +30,37 @@ pthread_mutex_t mutex;
 char readcrondfile[BUFFER_SIZE][BUFFER_SIZE];
 char checkcrondfile[BUFFER_SIZE][BUFFER_SIZE];
 
-
 typedef struct _crondtime{
+	char timebuf[BUFFER_SIZE][BUFFER_SIZE];
+	char sysbuf[BUFFER_SIZE];
+	struct _crondtime *next;
+}Node;
+Node *head;
+
+
+//typedef struct _crondtime{
 	pthread_t t_id;
 	int min_crond[MAXTIME];
 	int hour_crond[MAXTIME];
 	int day_crond[MAXTIME];
 	int month_crond[MAXTIME];
 	int weekday_crond[MAXTIME];
-//	struct _crondtime *next;
-}CT;
-//Node *head;
+	int mincnt;
+	int hourcnt;
+	int daycnt;
+	int monthcnt;
+	int weekdaycnt;
 
 struct timeval begin_t, end_t;
 
 void read_cronfile();
 void check_cronfile();
 void compare_cronfile();
+void pthread_cmd();
+void get_localtime(char *timestr);
 void read_timecmd(char *str);
 int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt);
+void make_systimebuf();
 void deliver_crondtime(int *savebuf, int itemcnt,int cntnum);
 void count_slash_withbar(char *startcnt, char *endcnt, char *slash, int *savebuf);
 void count_slash(char *cnt, char *slash, int *savebuf,int itemcnt);
@@ -57,4 +69,5 @@ void parse_calcul(char tokens[TOKEN_CNT][MINLEN],char *start,char *end,int itemc
 void clear_tokens(char tokens[TOKEN_CNT][MINLEN]);
 void calcultime(char *timestr);
 void startdaemon();
-//void list_insert(Node *newNode);
+void list_insert(Node *newnode);
+void list_print();
