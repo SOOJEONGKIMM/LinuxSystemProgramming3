@@ -4,6 +4,10 @@ int main(void){
 	if(pthread_mutex_init(&mutex,NULL)!=0)
 		fprintf(stderr,"mutex init error\n");
 	read_cronfile();
+/*	while(1){
+		sleep(2);
+		check_cronfile();
+	}*/
 	return 0;
 }
 void read_cronfile(){
@@ -17,20 +21,68 @@ void read_cronfile(){
 	}
 	char cronfilebuf[BUFFER_SIZE];
 	memset(cronfilebuf,0,BUFFER_SIZE);
+	int idx=0;
 	while(1){
 		fgets(cronfilebuf,BUFFER_SIZE,fp);
 		if(feof(fp))
 			break;
-		printf("%s",cronfilebuf);
+		printf("readfile: %s\n",cronfilebuf);
+		strcpy(readcrondfile[idx],cronfilebuf);
+		idx++;
+		printf("for comparefile:%s\n",readcrondfile[idx]);
 		read_timecmd(cronfilebuf);
 		memset(cronfilebuf,0,BUFFER_SIZE);
 	}
-
 	fclose(fp);
-
 } 
+//remove나 add로 cronfile 변동이 있는지 체크(무한반복)
+void check_cronfile(){
+	//ssu_crontab_file에서 주기가져옴  
+	FILE *fp;
+	char *cronfile="ssu_crontab_file";
+
+	if((fp=fopen(cronfile,"r"))<0){
+		fprintf(stderr,"fopen error for %s\n",cronfile);
+		exit(1);
+	}
+	char cronfilebuf[BUFFER_SIZE];
+	memset(cronfilebuf,0,BUFFER_SIZE);
+	int idx=0;
+	while(1){
+		fgets(cronfilebuf,BUFFER_SIZE,fp);
+		if(feof(fp))
+			break;
+		printf("readfile: %s\n",cronfilebuf);
+		strcpy(checkcrondfile[idx],cronfilebuf);
+		idx++;
+		printf("for comparefile:%s\n",checkcrondfile[idx]);
+		read_timecmd(cronfilebuf);
+		memset(cronfilebuf,0,BUFFER_SIZE);
+	}
+	fclose(fp);
+}
+//read_cronfile과 check_cronfile 비교(변동이 있는지 판별) (무한반복)
+void compare_cronfile(){
+
+
+
+
+}
 void pthread_cmd(){
 	pthread_t t_id;//thread id
+	CT CT;
+	int i;
+	for(i=0;i<=MIN_ITEM;i++)
+		printf("min deliver 작업중....index%d에 %d저장\n",i,CT.min_crond[i]);
+	for(i=0;i<=HOUR_ITEM;i++)
+		printf("hour deliver 작업중....index%d에 %d저장\n",i,CT.hour_crond[i]);
+	for(i=0;i<=DAY_ITEM;i++)
+		printf("daydeliver 작업중....index%d에 %d저장\n",i,CT.day_crond[i]);
+	for(i=0;i<=MONTH_ITEM;i++)
+		printf("month deliver 작업중....index%d에 %d저장\n",i,CT.month_crond[i]);
+	for(i=0;i<=WEEKDAY_ITEM;i++)
+		printf("weekday deliver 작업중....index%d에 %d저장\n",i,CT.weekday_crond[i]);
+	
 
 //	if(pthread_create(
 }
@@ -239,11 +291,11 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 					char startbackup[BUFFER_SIZE];
 					printf("숫자만before parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 					int endint=atoi(tokens[row]);
-					cntslash[cntnum]=endint;
 					cntnum++;
+					cntslash[cntnum]=endint;
 					printf("cntnum:%d\n",cntnum);
 					printf("숫자만after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
-					for(int i=0;i<cntnum;i++)
+					for(int i=0;i<=cntnum;i++)
 						printf("%d에 저장\n",cntslash[i]);
 					//start++;end++;
 					strcpy(tokens[row],end);
@@ -277,7 +329,7 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 					strcpy(start,tokens[row+1]);
 					printf("bar start:%s end:%s tok:%s\n",start,end,tokens[row+1]); 
 					strncpy(tokens[row+3],start,strlen(start)-strlen(end));
-					strcpy(end,end+1);
+					strcpy(end,end+1);//trim'-'
 					strncpy(tokens[row+4],end,strlen(end));
 					printf("tokens[row+3]:%s\n",tokens[row+3]);//1   1부터
 					printf("tokens[row+4]:%s\n",tokens[row+4]);//5   5까지 
@@ -286,6 +338,21 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 				else
 					count_slash(tokens[row+1],tokens[row+2],cntslash,itemcnt);
 			}
+			else if(strstr(start,"/")==NULL&&strstr(start,"-")!=NULL){
+					printf("계산전 bar start:%s end:%s tok:%s\n",start,end,tokens[row]); 
+	printf("숫자-숫자 계산중..\n");
+				end=strpbrk(start,bar);
+				strcpy(tokens[row],start);
+					printf("bar start:%s end:%s tok:%s\n",start,end,tokens[row]); 
+					strncpy(tokens[row+3],start,strlen(start)-strlen(end));
+					strcpy(end,end+1);//trim '-'
+					strncpy(tokens[row+4],end,strlen(end));
+					printf("tokens[row+3]:%s\n",tokens[row+3]);//1   1부터
+					printf("tokens[row+4]:%s\n",tokens[row+4]);//5   5까지 
+
+count_withbar(tokens[row+3],tokens[row+4],cntslash);
+			}
+
 		}//','기호 없는 경우 끝 
 
 	}//숫자only랑 독자적'*'제외 케이스들 끝 
@@ -325,16 +392,6 @@ void deliver_crondtime(int *savebuf, int itemcnt,int cntnum){
 	}
 	//list_insert(node);
 
-	for(i=0;i<=MIN_ITEM;i++)
-		printf("min deliver 작업중....index%d에 %d저장\n",i,CT.min_crond[i]);
-	for(i=0;i<=HOUR_ITEM;i++)
-		printf("hour deliver 작업중....index%d에 %d저장\n",i,CT.hour_crond[i]);
-	for(i=0;i<=DAY_ITEM;i++)
-		printf("daydeliver 작업중....index%d에 %d저장\n",i,CT.day_crond[i]);
-	for(i=0;i<=MONTH_ITEM;i++)
-		printf("month deliver 작업중....index%d에 %d저장\n",i,CT.month_crond[i]);
-	for(i=0;i<=WEEKDAY_ITEM;i++)
-		printf("weekday deliver 작업중....index%d에 %d저장\n",i,CT.weekday_crond[i]);
 	
 
 }
@@ -381,21 +438,41 @@ void count_slash_withbar(char *startcnt, char *endcnt, char *slash, int *savebuf
 	int endcntINT=atoi(endcnt);
 	int slashINT=atoi(slash);
 	startcntINT--;
+	printf("숫자-숫자/주기 계산중..\n");
 	while(endcntINT>=startcntINT){
 		startcntINT+=slashINT;
 		printf("st:%d\n",startcntINT);
-		if(endcntINT<=startcntINT)
-			break;
 		savebuf[cntnum]=startcntINT;
 		printf("save[%d]:%d\n",cntnum,savebuf[cntnum]);
+		if(endcntINT<=startcntINT)
+			break;
 		cntnum++;
 	}
 	printf("%s부터 %s까지 %s만큼 건너뛰어 \n",startcnt,endcnt,slash);
-	printf("%d부터 %d까지 %d만큼 건너뛰어 \n",startcntINT,endcntINT,slashINT);
-	for(int i=0;i<cntnum;i++)
+	//printf("%d부터 %d까지 %d만큼 건너뛰어 \n",startcntINT,endcntINT,slashINT);
+	for(int i=0;i<=cntnum;i++)
 		printf("%d에 저장\n",savebuf[i]);
 
 }
+//숫자-숫자 계산 
+void count_withbar(char *startcnt, char *endcnt, int *savebuf){
+	int startcntINT=atoi(startcnt);
+	int endcntINT=atoi(endcnt);
+	//startcntINT--;
+	printf("숫자-숫자 계산중..\n");
+	while(endcntINT>=startcntINT){
+		printf("st:%d\n",startcntINT);
+		savebuf[cntnum]=startcntINT;
+		if(endcntINT<=startcntINT)
+			break;
+		startcntINT++;
+		cntnum++;
+	}
+	printf("%s부터 %s까지 \n",startcnt,endcnt);
+	for(int i=0;i<=cntnum;i++)
+		printf("%d에 저장\n",savebuf[i]);
+}
+	
 //  */주기 계산
 void count_slash(char *cnt, char *slash, int *savebuf,int itemcnt){
 	int Itemcnt=itemcnt;
