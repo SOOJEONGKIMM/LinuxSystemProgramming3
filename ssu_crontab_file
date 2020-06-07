@@ -1,1 +1,2 @@
-05 23 07 06 0 echo "echo every night" > echomsg.txt
+28-30 23 07 06 0 echo "hello">hello.txt
+37,38,39,40 23 07 06 0 echo "bye">bye.txt

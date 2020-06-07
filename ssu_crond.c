@@ -22,6 +22,7 @@ int main(void){
 	return 0;
 }
 void read_cronfile(){
+	head=NULL;
 	//ssu_crontab_file에서 주기가져옴  
 	FILE *fp;
 	char *cronfile="ssu_crontab_file";
@@ -277,7 +278,7 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 	//기호 없이 숫자만 존재 
 	if(end==NULL&&(strstr(start,"*")==NULL)){
 		printf("%s  ==  %s only numbers\n",start,end);//숫자만 존재 
-		cntnum=1;
+		cntnum=0;
 		int isol_num=atoi(start);
 		cntslash[0]=isol_num;
 	}
@@ -309,8 +310,10 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 			commacnt++;
 			int commanum=commacnt;
 			while(commacnt){
-				if(commacnt!=1)
-					end=strpbrk(start,comma);//','기호로 나누기 
+				if(strstr(start,comma)!=NULL){
+					if(commacnt!=1)
+						end=strpbrk(start,comma);
+				}//','기호로 나누기 
 				while(start<end){
 					if(*start!=' ')
 						strncat(tokens[row],start,1);
@@ -337,7 +340,8 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 					strcpy(tokbackup,tokens[row]);
 					memset(tokens[row],0,TOKEN_CNT);
 					strncpy(tokens[row],tokbackup,toklen-strlen(end));
-				}
+				}//,작업 마지막 아이 
+
 				printf("'/'주기기호 strstr전에 tokens[%d]:%s\n",row,tokens[row]);
 				//'/'주기기호가 존재한다면 
 				if(strstr(tokens[row],"/")!=NULL){
@@ -390,7 +394,11 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 					for(int i=0;i<=cntnum;i++)
 						printf("%d에 저장\n",cntslash[i]);
 					//start++;end++;
+					printf("숫자만작업완료after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 					memset(tokens[row],0,sizeof(tokens[row]));
+				if(strstr(end,",")==NULL){
+					strcpy(tokens[row],end);
+				}
 					//strcpy(tokens[row],end);
 					printf("숫자만작업완료after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 				}
@@ -450,7 +458,7 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 
 	}//숫자only랑 독자적'*'제외 케이스들 끝 
 	printf("====================================================\n");
-	for(int i=0;i<=cntnum+2;i++)
+	for(int i=0;i<=cntnum;i++)
 		printf("모두완료.index%d에 %d저장\n",i,cntslash[i]);
 	deliver_crondtime(cntslash,itemcnt,cntnum);
 }
@@ -503,11 +511,11 @@ void make_systimebuf(char *syscmd){
 	printf("arrived here\n");
 	char timestr[BUFFER_SIZE];
 	memset(timestr,0,BUFFER_SIZE);
-	for(int a=0;a<mincnt;a++){
-		for(int b=0;b<hourcnt;b++){
-			for(int c=0;c<daycnt;c++){
-				for(int d=0;d<monthcnt;d++){
-					for(int e=0;e<weekdaycnt;e++){
+	for(int a=0;a<=mincnt;a++){
+		for(int b=0;b<=hourcnt;b++){
+			for(int c=0;c<=daycnt;c++){
+				for(int d=0;d<=monthcnt;d++){
+					for(int e=0;e<=weekdaycnt;e++){
 
 						sprintf(node->timebuf[i],"%02d-%02d-%02d-%02d-%02d\n",min_crond[a],hour_crond[b],day_crond[c],month_crond[d],weekday_crond[e]);
 						printf("made timestr:%s\n",node->timebuf[i]);
@@ -517,11 +525,21 @@ void make_systimebuf(char *syscmd){
 			}
 		}
 	}
+	printf("timeidx:%d\n",i);
 	node->timeidx=i;
 	strcpy(node->sysbuf,syscmd);
 	list_insert(node);
 
-
+	memset(min_crond,0,sizeof(min_crond));
+	memset(hour_crond,0,sizeof(hour_crond));
+	memset(day_crond,0,sizeof(day_crond));
+	memset(month_crond,0,sizeof(month_crond));
+	memset(weekday_crond,0,sizeof(weekday_crond));
+	mincnt=0;
+	hourcnt=0;
+	daycnt=0;
+	monthcnt=0;
+	weekdaycnt=0;
 }
 
 void parse_calcul(char tokens[TOKEN_CNT][MINLEN],char *start,char *end,int itemcnt,int *savebuf){
