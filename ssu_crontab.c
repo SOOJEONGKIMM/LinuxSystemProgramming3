@@ -113,6 +113,7 @@ int do_addOpt(char *str) {
 	char *op=",-*/";
 	char slash='/';
 	char bar='-';
+	char star='*';
 
 
 
@@ -288,7 +289,7 @@ int do_addOpt(char *str) {
 				if(parser2[0]=='/'){
 					printf("slash...\n");
 					printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
-					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
+					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar&&opbuf[p-1]!=star){
 						printf("runcycle range is wrong(not 'range/number')\n");
 						gettimeofday(&end_t, NULL);
 						ssu_runtime(&begin_t, &end_t);
@@ -390,7 +391,7 @@ int do_addOpt(char *str) {
 				if(parser2[0]=='/'){
 					printf("slash...\n");
 					printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
-					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
+					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar&&opbuf[p-1]!=star){
 						printf("runcycle range is wrong(not 'range/number')\n");
 						gettimeofday(&end_t, NULL);
 						ssu_runtime(&begin_t, &end_t);
@@ -500,7 +501,7 @@ int do_addOpt(char *str) {
 				if(parser2[0]=='/'){
 					printf("slash...\n");
 					printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
-					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
+					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar&&opbuf[p-1]!=star){
 						printf("runcycle range is wrong(not 'range/number')\n");
 						gettimeofday(&end_t, NULL);
 						ssu_runtime(&begin_t, &end_t);
@@ -599,7 +600,7 @@ int do_addOpt(char *str) {
 				if(parser2[0]=='/'){
 					printf("slash...\n");
 					printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
-					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
+					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar&&opbuf[p-1]!=star){
 						printf("runcycle range is wrong(not 'range/number')\n");
 						gettimeofday(&end_t, NULL);
 						ssu_runtime(&begin_t, &end_t);
@@ -698,7 +699,7 @@ int do_addOpt(char *str) {
 				if(parser2[0]=='/'){
 					printf("slash...\n");
 					printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
-					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
+					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar&&opbuf[p-1]!=star){
 						printf("runcycle range is wrong(not 'range/number')\n");
 						gettimeofday(&end_t, NULL);
 						ssu_runtime(&begin_t, &end_t);
