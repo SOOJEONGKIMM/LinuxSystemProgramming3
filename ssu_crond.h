@@ -33,6 +33,7 @@ char checkcrondfile[BUFFER_SIZE][BUFFER_SIZE];
 typedef struct _crondtime{
 	char timebuf[BUFFER_SIZE][BUFFER_SIZE];
 	char sysbuf[BUFFER_SIZE];
+	int timeidx;
 	struct _crondtime *next;
 }Node;
 Node *head;

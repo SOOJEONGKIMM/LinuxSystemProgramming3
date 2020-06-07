@@ -16,6 +16,7 @@ int main(void){
 		read_cronfile();
 		update=0;
 		}*/
+		list_print();
 		pthread_cmd();
 	}
 	return 0;
@@ -103,11 +104,32 @@ void get_localtime(char *timestr){
 	sprintf(timestr,"%02d-%02d-%02d-%02d-%02d\n",t->tm_min,t->tm_hour,t->tm_mday,t->tm_mon+1,t->tm_wday);
 	printf("localtime: %s",timestr);
 }
-
+//compare localtime & cmdtime 
 void pthread_cmd(){
 	char timestr[TIME_SIZE];//localtime
 	pthread_t t_id;//thread id
 	int i;
+	char localtime[TIME_SIZE];
+	get_localtime(timestr);
+	memset(localtime,0,TIME_SIZE);
+	strcpy(localtime,timestr);
+
+	Node *node;
+	node=head;
+	while(node){
+		for(i=0;i<node->timeidx;i++){
+			printf("l:%s",localtime);
+			printf("c:%s",node->timebuf[i]);
+			if(!strcmp(localtime,node->timebuf[i])){
+				printf("TIME IS NOW!!!!!!!!\n");
+			}
+		}
+		node=node->next;
+	}
+
+	//	if(pthread_create(
+}
+void debug(){
 	/*	for(i=0;i<=MIN_ITEM;i++)
 		printf("min deliver 작업중....index%d에 %d저장\n",i,min_crond[i]);
 		for(i=0;i<=HOUR_ITEM;i++)
@@ -119,10 +141,6 @@ void pthread_cmd(){
 		for(i=0;i<=WEEKDAY_ITEM;i++)
 		printf("weekday deliver 작업중....index%d에 %d저장\n",i,weekday_crond[i]);
 	 */
-	get_localtime(timestr);
-
-
-	//	if(pthread_create(
 }
 void read_timecmd(char *str){
 	//실행주기 명령어 입력받는 코드
@@ -482,6 +500,7 @@ void make_systimebuf(char *syscmd){
 			}
 		}
 	}
+	node->timeidx=i;
 	strcpy(node->sysbuf,syscmd);
 	list_insert(node);
 
@@ -668,9 +687,8 @@ void list_print(){
 	node=head;
 	int i=0;
 	while(node){
-		while(node->timebuf[i]!=NULL){
+		for(i=0;i<node->timeidx;i++){
 			printf("delivering..timebuf:%s %s\n",node->timebuf[i],node->sysbuf);
-			i++;
 		}
 		node=node->next;
 	}
