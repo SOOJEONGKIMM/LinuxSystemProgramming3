@@ -47,6 +47,7 @@ typedef struct _snode{
 	char subpath[FILE_SIZE];
 	char sigsrc[FILE_SIZE];//SIGINT받는경우 백업tmpdst를 sigsrc로 살려줌 
 	char tmpdst[BUFFER_SIZE];//SIGINT받는경우 
+	int replace;//1 if replace
 	int mtime;
 	long fsize;
 	struct _snode *next;

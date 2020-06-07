@@ -406,10 +406,12 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 		if(S_ISDIR(srcstat.st_mode)){
 			if(ropt){
 				mkdir(newdst,srcstat.st_mode);
+				//sigint받으면 sigsrc는 모두 삭제함 
+				strcpy(srcd->sigsrc,newdst);
 			}
 		}
 		else if(S_ISREG(srcstat.st_mode)){
-			if(!list_samefilesearch(srcd->onlysrcfname,srcd->mtime,srcd->fsize)){
+			if(!list_samefilesearch(srcd->onlysrcfname,srcd->mtime,srcd->fsize)&&!list_samenamesearch(srcd->onlysrcfname,JUSTCHECK,NULL)){
 				//src파일을 dst디렉토리 내로 옮김 
 				if(rename(srcd->srcpath,newdst)<0){
 					fprintf(stderr,"rename error for %s to %s\n",srcd->srcpath,newdst);
@@ -429,7 +431,7 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 				}
 				//sigint받으면 sigsrc는 모두 삭제함 
 				strcpy(srcd->sigsrc,newdst);
-				printf("sigsrc:%s\n",srcd->sigsrc);
+				printf("copy sigsrc:%s\n",srcd->sigsrc);
 				write_rsynclog_files(srcd->subpath,srcd->fsize);
 			}//이름만 같은 경우 대체 
 			else if(!list_samefilesearch(srcd->onlysrcfname,srcd->mtime, srcd->fsize)&&list_samenamesearch(srcd->onlysrcfname,JUSTCHECK,NULL)){
@@ -453,6 +455,7 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 					fprintf(stderr,"chmod error for newsrc:%s\n",src);
 					exit(1);
 				}
+				srcd->replace=1;
 				//sigint받으면 sigsrc는 모두 삭제함 
 				write_rsynclog_files(srcd->subpath,srcd->fsize);
 			}
@@ -549,24 +552,24 @@ static void quit_rsync(int signo){
 	sNode *sig;
 	sig=shead;
 	while(sig){
-		//if(access(sig->tmpdst,F_OK)!=0){ 
+		if(sig->replace!=1){ 
 			if(remove(sig->sigsrc)==0)
 				printf("remove %s succeed\n",sig->sigsrc);
 			else
 				printf("remove %s failed\n",sig->sigsrc);
-		//}
+		}
 		sig=sig->next;
 	}
 
 	//빈 디렉토리 다시 삭제처리(위에선 빈디렉토리가 아니라 삭제실패됨)
 	sig=shead;
 	while(sig){
-		//if(access(sig->tmpdst,F_OK)!=0){ 
+		if(sig->replace!=1){ 
 			if(rmdirs(sig->sigsrc,1)==0)
 				printf("rmdirs remove %s succeed\n",sig->sigsrc);
 			else
 				printf("rmdirs remove %s failed\n",sig->sigsrc);
-		//}
+		}
 		sig=sig->next;
 	}
 	//copy file한 경우
@@ -576,11 +579,17 @@ static void quit_rsync(int signo){
 		printf("remove dst:%s failed\n",sigdst);
 
 	//대체한 경우 백업해둔 dst 되살리기 
-	if(access(sig->tmpdst,F_OK)==0){//replace한 경우 
+	sig=shead;
+	while(sig){
+	printf("replacetrue:%d\n",sig->replace);
+	if(sig->replace==1){//replace한 경우 
+		printf("renaming tmp..\n");
 		if(rename(sig->tmpdst,sig->sigsrc)<0){
-			fprintf(stderr,"rename error for %s to %s\n",sigdst,tmpdst);
+			fprintf(stderr,"rename error for %s to %s\n",sig->tmpdst,sig->sigsrc);
 			exit(1);
 		}
+	}
+	sig=sig->next;
 	}
 
 	printf("got SIGINT(%d).. quiting rsync job..\n",SIGINT);
@@ -762,7 +771,7 @@ int list_samenamesearch(char *cmpfname,int opt,char *newdst){
 					exit(1);
 				}
 				strcpy(srcd->sigsrc,newdst);//src로 대체된dst 
-				printf("sigsrc:%s\n",srcd->sigsrc);
+				printf("replace sigsrc:%s\n",srcd->sigsrc);
 				strcpy(srcd->tmpdst,tmpdst);//기존dst백업_SIGINT받으면 살려줌 
 			}
 
