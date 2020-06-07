@@ -16,9 +16,12 @@
 #define SECOND_TO_MICRO 1000000
 #define BUFFER_SIZE 1024
 #define TIME_SIZE 64
-#define FILE_SIZE 128
-#define PATH_SIZE 256
+#define FILE_SIZE 256
+#define PATH_SIZE 528
 #define OPT_SIZE 8 
+
+#define REPLACE 123467890
+#define JUSTCHECK 987654321
 
 struct timeval begin_t, end_t;
 
@@ -27,7 +30,7 @@ struct timeval begin_t, end_t;
 
 //dst
 typedef struct _dnode{
-	char dstpath[PATH_SIZE];
+	char dstpath[FILE_SIZE];
 	char onlydstfname[PATH_SIZE];
 	int mtime;
 	long fsize;
@@ -41,8 +44,9 @@ typedef struct _snode{
 	char onlysrcfname[FILE_SIZE];
 	char primfname[FILE_SIZE];//서브디렉토리 제외 파일들만 
 	char logpath[FILE_SIZE];
-	char sigsrc[FILE_SIZE];
 	char subpath[FILE_SIZE];
+	char sigsrc[FILE_SIZE];//SIGINT받는경우 백업tmpdst를 sigsrc로 살려줌 
+	char tmpdst[BUFFER_SIZE];//SIGINT받는경우 
 	int mtime;
 	long fsize;
 	struct _snode *next;
@@ -56,7 +60,7 @@ void list_dstinsert(Node *newnode);
 void list_srcinsert(sNode *newnode);
 void list_dstprint();
 void list_srcprint();
-int list_samenamesearch(char *cmpfname);
+int list_samenamesearch(char *cmpfname,int opt,char *newdst);
 int list_samefilesearch(char *cmpfname,int cmpmtime, long cmpfsize);
 void parsechar(char *tmp,char *onlyfname,char *ch);
 int rsync_copyF(char *src,char *onlysrcfname,char *dst,char *cmdstr);

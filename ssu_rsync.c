@@ -1,5 +1,4 @@
 #include "./ssu_rsync.h"
-
 int main(int argc, char *argv[]){
 	gettimeofday(&begin_t, NULL);
 	char option[OPT_SIZE];
@@ -18,8 +17,8 @@ int main(int argc, char *argv[]){
 	if(!strcmp(argv[1],"-r")||!strcmp(argv[1],"-t")||!strcmp(argv[1],"-m")){
 		if(argc!=4){
 			fprintf(stderr,"Usage: %s [option] <src> <dst>\n",argv[0]);
-		gettimeofday(&end_t, NULL);
-		ssu_runtime(&begin_t, &end_t);
+			gettimeofday(&end_t, NULL);
+			ssu_runtime(&begin_t, &end_t);
 			exit(1);
 		}
 		strcpy(option,argv[1]);
@@ -98,14 +97,14 @@ int main(int argc, char *argv[]){
 	int samefile=0;
 	int samename=0;
 	int nofile=0;
-	if(!list_samefilesearch(onlysrcfname,srcmtime, srcfsize)&&!list_samenamesearch(onlysrcfname))
+	if(!list_samefilesearch(onlysrcfname,srcmtime, srcfsize)&&!list_samenamesearch(onlysrcfname,JUSTCHECK,NULL))
 		nofile=1;
 	if(list_samefilesearch(onlysrcfname,srcmtime, srcfsize)){
 		printf("same file. rsync job canceled.\n");
 		samefile=1;
 		exit(0);
 	}
-	if(!list_samefilesearch(onlysrcfname,srcmtime, srcfsize)&&list_samenamesearch(onlysrcfname)){
+	if(!list_samefilesearch(onlysrcfname,srcmtime, srcfsize)&&list_samenamesearch(onlysrcfname,JUSTCHECK,NULL)){
 		samename=1;
 		printf("Same name file. Rsync job cancelled..\n");
 		exit(0);
@@ -368,85 +367,95 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 	if(shead->next!=NULL)//빈디렉토리 
 		write_rsynclog_timecmd(cmdstr);
 	while(srcd){
-		/*if(strlen(srcd->primfname)==0){
-		  srcd=srcd->next;
-		  continue;
-		  }*/
-		if(!list_samenamesearch(srcd->onlysrcfname)){
 
+		printf("copying prim:%s fname:%s\n",srcd->primfname,srcd->srcpath);
+		printf("copying fname:%s\n",srcd->srcpath);
+		if((srcfpr=fopen(srcd->srcpath,"r"))<0){
+			fprintf(stderr,"fopen error for src_read:%s\n",src);
+			exit(1);
+		}
+		struct stat srcstat;
+		lstat(srcd->srcpath,&srcstat);
+
+		//src 파일 복사(src안에서) 
+		char tmpname[PATH_SIZE];
+		memset(tmpname,0,PATH_SIZE);
+		if(S_ISREG(srcstat.st_mode)){
+			sprintf(tmpname,"%stmp",srcd->onlysrcfname);
+			if((srcfpw=fopen(tmpname,"w"))<0){
+				fprintf(stderr,"fopen error for src_write:%s\n",src);
+				exit(1);
+			}
+			char buf[BUFFER_SIZE];
+			memset(buf,0,BUFFER_SIZE);
+			while(!feof(srcfpr)){
+				fgets(buf,sizeof(buf),srcfpr);
+				fputs(buf,srcfpw);
+				fseek(srcfpw,0,SEEK_END);
+				sprintf(buf,"\n");
+			}
+			fclose(srcfpr);
+			fclose(srcfpw);
+		}
+
+		memset(newdst,0,PATH_SIZE);
+		//sprintf(newdst,"%s/%s",dst,srcd->onlysrcfname);
+		sprintf(newdst,"%s/%s",dst,srcd->subpath);
+		printf("sub:%s\n",srcd->subpath);
+		//sprintf(newdst,"%s/%s",dst,srcd->logpath);
+		if(S_ISDIR(srcstat.st_mode)){
+			if(ropt){
+				mkdir(newdst,srcstat.st_mode);
+			}
+		}
+		else if(S_ISREG(srcstat.st_mode)){
 			if(!list_samefilesearch(srcd->onlysrcfname,srcd->mtime,srcd->fsize)){
-				printf("copying prim:%s fname:%s\n",srcd->primfname,srcd->srcpath);
-				printf("copying fname:%s\n",srcd->srcpath);
-				if((srcfpr=fopen(srcd->srcpath,"r"))<0){
-					fprintf(stderr,"fopen error for src_read:%s\n",src);
+				//src파일을 dst디렉토리 내로 옮김 
+				if(rename(srcd->srcpath,newdst)<0){
+					fprintf(stderr,"rename error for %s to %s\n",srcd->srcpath,newdst);
 					exit(1);
 				}
-				struct stat srcstat;
-				lstat(srcd->srcpath,&srcstat);
-
-				char tmpname[PATH_SIZE];
-				memset(tmpname,0,PATH_SIZE);
-				if(S_ISREG(srcstat.st_mode)){
-					sprintf(tmpname,"%stmp",srcd->onlysrcfname);
-					if((srcfpw=fopen(tmpname,"w"))<0){
-						fprintf(stderr,"fopen error for src_write:%s\n",src);
-						exit(1);
-					}
-					char buf[BUFFER_SIZE];
-					memset(buf,0,BUFFER_SIZE);
-					while(!feof(srcfpr)){
-						fgets(buf,sizeof(buf),srcfpr);
-						fputs(buf,srcfpw);
-						fseek(srcfpw,0,SEEK_END);
-						sprintf(buf,"\n");
-					}
-					fclose(srcfpr);
-					fclose(srcfpw);
+				memset(sigdst,0,PATH_SIZE);
+				strcpy(sigdst,newdst);
+				//tmp를 src이름으로 변경 (src안에서)
+				if(rename(tmpname,srcd->srcpath)<0){
+					fprintf(stderr,"rename error for %s to %s\n",tmpname,src);
+					exit(1);
 				}
-
-				memset(newdst,0,PATH_SIZE);
-				//sprintf(newdst,"%s/%s",dst,srcd->onlysrcfname);
-				sprintf(newdst,"%s/%s",dst,srcd->subpath);
-				printf("sub:%s\n",srcd->subpath);
-				//sprintf(newdst,"%s/%s",dst,srcd->logpath);
-				if(S_ISDIR(srcstat.st_mode)){
-					if(ropt){
-						mkdir(newdst,srcstat.st_mode);
-					}
-				}
-				else if(S_ISREG(srcstat.st_mode)){
-					//src파일을 dst디렉토리 내로 옮김 
-					if(rename(srcd->srcpath,newdst)<0){
-						fprintf(stderr,"rename error for %s to %s\n",srcd->srcpath,newdst);
-						exit(1);
-					}
-					memset(sigdst,0,PATH_SIZE);
-					strcpy(sigdst,newdst);
-					//tmp를 src이름으로 변경 
-					if(rename(tmpname,srcd->srcpath)<0){
-						fprintf(stderr,"rename error for %s to %s\n",tmpname,src);
-						exit(1);
-					}
-					//복사src를 기존src접근권한으로 변경 
-					if(chmod(srcd->srcpath,srcstat.st_mode)<0){
-						fprintf(stderr,"chmod error for newsrc:%s\n",src);
-						exit(1);
-					}
+				//복사src를 기존src접근권한으로 변경 
+				if(chmod(srcd->srcpath,srcstat.st_mode)<0){
+					fprintf(stderr,"chmod error for newsrc:%s\n",src);
+					exit(1);
 				}
 				//sigint받으면 sigsrc는 모두 삭제함 
 				strcpy(srcd->sigsrc,newdst);
 				printf("sigsrc:%s\n",srcd->sigsrc);
 				write_rsynclog_files(srcd->subpath,srcd->fsize);
+			}//이름만 같은 경우 대체 
+			else if(!list_samefilesearch(srcd->onlysrcfname,srcd->mtime, srcd->fsize)&&list_samenamesearch(srcd->onlysrcfname,JUSTCHECK,NULL)){
+				//SIGINT 받는 경우를 위해 dst파일 백업 
+				list_samenamesearch(srcd->onlysrcfname,REPLACE,newdst);
+
+				//src파일을 dst디렉토리 내로 옮김 
+				if(rename(srcd->srcpath,newdst)<0){
+					fprintf(stderr,"rename error for %s to %s\n",srcd->srcpath,newdst);
+					exit(1);
+				}
+				memset(sigdst,0,PATH_SIZE);
+				strcpy(sigdst,newdst);
+				//tmp를 src이름으로 변경 (src안에서)
+				if(rename(tmpname,srcd->srcpath)<0){
+					fprintf(stderr,"rename error for %s to %s\n",tmpname,src);
+					exit(1);
+				}
+				//복사src를 기존src접근권한으로 변경 
+				if(chmod(srcd->srcpath,srcstat.st_mode)<0){
+					fprintf(stderr,"chmod error for newsrc:%s\n",src);
+					exit(1);
+				}
+				//sigint받으면 sigsrc는 모두 삭제함 
+				write_rsynclog_files(srcd->subpath,srcd->fsize);
 			}
-			/*else if(!list_samefilesearch(onlysrcfname,srcmtime, srcfsize)&&list_samenamesearch(onlysrcfname)){
-			//SIGINT 받는 경우를 위해 dst파일 백업 
-			memset(tmpdst,0,PATH_SIZE);
-			sprintf(tmpdst,"%s_tmp",dst);
-			if(rename(dst,tmpdst)<0){
-			fprintf(stderr,"rename error for %s to %s\n",dst,tmpdst);
-			exit(1);
-			}
-			}*/
 		}
 		srcd=srcd->next;
 	}
@@ -531,6 +540,7 @@ int rsync_replaceD(char *src, char *onlysrcdname, char *dst,char *cmdstr){
 	list_srcprint();
 	return 0;
 }
+
 //동기화 작업 중 SIGINT발생시 동기화작업취소되고 그전상태로 유지되어야함 
 static void quit_rsync(int signo){
 	printf("tmp:%s sig:%s\n",tmpdst,sigdst);
@@ -539,33 +549,38 @@ static void quit_rsync(int signo){
 	sNode *sig;
 	sig=shead;
 	while(sig){
-		if(remove(sig->sigsrc)==0)
-			printf("remove %s succeed\n",sig->sigsrc);
-		else
-			printf("remove %s failed\n",sig->sigsrc);
+		//if(access(sig->tmpdst,F_OK)!=0){ 
+			if(remove(sig->sigsrc)==0)
+				printf("remove %s succeed\n",sig->sigsrc);
+			else
+				printf("remove %s failed\n",sig->sigsrc);
+		//}
 		sig=sig->next;
 	}
+
 	//빈 디렉토리 다시 삭제처리(위에선 빈디렉토리가 아니라 삭제실패됨)
 	sig=shead;
 	while(sig){
-		if(rmdirs(sig->sigsrc,1)==0)
-			printf("remove %s succeed\n",sig->sigsrc);
-		else
-			printf("remove %s failed\n",sig->sigsrc);
+		//if(access(sig->tmpdst,F_OK)!=0){ 
+			if(rmdirs(sig->sigsrc,1)==0)
+				printf("rmdirs remove %s succeed\n",sig->sigsrc);
+			else
+				printf("rmdirs remove %s failed\n",sig->sigsrc);
+		//}
 		sig=sig->next;
 	}
-	//백업해둔 dst 되살리기 
-	if(access(tmpdst,F_OK)==0){//replace한 경우 
-		if(rename(sigdst,tmpdst)<0){
+	//copy file한 경우
+	if(remove(sigdst)==0)
+		printf("remove dst:%s succeed\n",sigdst);
+	else
+		printf("remove dst:%s failed\n",sigdst);
+
+	//대체한 경우 백업해둔 dst 되살리기 
+	if(access(sig->tmpdst,F_OK)==0){//replace한 경우 
+		if(rename(sig->tmpdst,sig->sigsrc)<0){
 			fprintf(stderr,"rename error for %s to %s\n",sigdst,tmpdst);
 			exit(1);
 		}
-	}
-	else{//copy한 경우
-		if(remove(sigdst)==0)
-			printf("remove dst:%s succeed\n",sigdst);
-		else
-			printf("remove dst:%s failed\n",sigdst);
 	}
 
 	printf("got SIGINT(%d).. quiting rsync job..\n",SIGINT);
@@ -730,19 +745,38 @@ void list_srcinsert(sNode *newnode){
 	}
 }
 //dst디렉토리 내 동일한 파일인지/ 이름만 동일한지 판별 
-int list_samenamesearch(char *cmpfname){
-	Node *search;
+int list_samenamesearch(char *cmpfname,int opt,char *newdst){
+	Node *search;//dst
 	search=head;
+	sNode *srcd;
+	srcd=shead;
 	while(search){
 		//printf("dst:%s src:%s\n",search->onlydstfname,cmpfname);
-		if(!strcmp(search->onlydstfname,cmpfname))
+		if(!strcmp(search->onlydstfname,cmpfname)){
+			//SIGINT 받는 경우 위해 dst 백업 
+			if(opt==REPLACE){
+				memset(tmpdst,0,PATH_SIZE);
+				sprintf(tmpdst,"%s_tmp",search->dstpath);
+				if(rename(search->dstpath,tmpdst)<0){
+					fprintf(stderr,"rename error for %s to %s\n",search->dstpath,tmpdst);
+					exit(1);
+				}
+				strcpy(srcd->sigsrc,newdst);//src로 대체된dst 
+				printf("sigsrc:%s\n",srcd->sigsrc);
+				strcpy(srcd->tmpdst,tmpdst);//기존dst백업_SIGINT받으면 살려줌 
+			}
+
 			return 1;//존재하는 파일/디렉토리 
+		}
 		search=search->next;
 	}
+	if(opt==REPLACE)
+		list_srcinsert(srcd);
+
 	return 0;//존재하지않는 파일/디렉토리 
 }
 int list_samefilesearch(char *cmpfname,int cmpmtime, long cmpfsize){
-	Node *search;
+	Node *search;//dst
 	search=head;
 	while(search){
 		printf("src:name:%s mtime:%d size:%ld\n",cmpfname,cmpmtime,cmpfsize);

@@ -5,3 +5,33 @@ srcsub2/sub3 4096bytes
 srcsub2/sub3/srcsub3file 44bytes
 [Thu Jun  4 03:00:25 2020] ssu_rsync ./ ../
 srcdir 4096bytes
+[Mon Jun  8 03:09:46 2020] ssu_rsync ./tmp/srcdir ./dst
+srcfile2 85bytes
+[Mon Jun  8 03:11:18 2020] ssu_rsync ./tmp/srcdir ./dst
+srcfile2 86bytes
+[Mon Jun  8 03:12:19 2020] ssu_rsync -r ./tmp/srcdir ./dst
+srcfile2 87bytes
+srcsub2/srcsub2file 45bytes
+srcsub2/sub3/srcsub3file 45bytes
+[Mon Jun  8 03:20:11 2020] ssu_rsync -r ./tmp/srcdir ./dst
+srcfile2 88bytes
+srcsub2/srcsub2file 46bytes
+srcsub2/sub3/srcsub3file 46bytes
+[Mon Jun  8 03:25:21 2020] ssu_rsync -r ./tmp/srcdir ./dst
+srcfile2 89bytes
+srcsub2/srcsub2file 47bytes
+srcsub2/sub3/srcsub3file 47bytes
+[Mon Jun  8 03:29:49 2020] ssu_rsync ./tmp/srcdir ./dst
+srcfile2 90bytes
+[Mon Jun  8 03:30:32 2020] ssu_rsync -r ./tmp/srcdir ./dst
+srcfile2 91bytes
+srcsub2/srcsub2file 48bytes
+srcsub2/sub3/srcsub3file 48bytes
+[Mon Jun  8 03:32:43 2020] ssu_rsync -r ./tmp/srcdir ./dst
+srcfile2 92bytes
+srcsub2/srcsub2file 49bytes
+srcsub2/sub3/srcsub3file 49bytes
+[Mon Jun  8 03:35:12 2020] ssu_rsync -r ./tmp/srcdir ./dst
+srcfile2 93bytes
+srcsub2/srcsub2file 50bytes
+srcsub2/sub3/srcsub3file 50bytes
