@@ -107,7 +107,7 @@ void get_localtime(char *timestr){
 //compare localtime & cmdtime 
 void pthread_cmd(){
 	char timestr[TIME_SIZE];//localtime
-	pthread_t t_id;//thread id
+	pid_t pid;
 	int i;
 	char localtime[TIME_SIZE];
 	get_localtime(timestr);
@@ -121,14 +121,31 @@ void pthread_cmd(){
 			printf("l:%s",localtime);
 			printf("c:%s",node->timebuf[i]);
 			if(!strcmp(localtime,node->timebuf[i])){
+				pthread_t t_id;//thread id
 				printf("TIME IS NOW!!!!!!!!\n");
+				node->t_id=t_id;
+				if(pthread_create(&node->t_id,NULL,thread_handler,(void*)node)!=0)
+					fprintf(stderr,"pthread_create() error\n");
+				pthread_detach(node->t_id);
+
 			}
 		}
 		node=node->next;
 	}
-
-	//	if(pthread_create(
+	//pthread_exit();
 }
+void* thread_handler(void *arg){
+	char sys[BUFFER_SIZE];
+	Node *node=(Node*)arg;
+	pthread_t t_id=pthread_self();
+	if(node->t_id!=t_id){
+		fprintf(stderr,"error:thread id is different\n");
+		node->t_id=t_id;
+	}
+	system(node->sysbuf);
+
+}
+
 void debug(){
 	/*	for(i=0;i<=MIN_ITEM;i++)
 		printf("min deliver 작업중....index%d에 %d저장\n",i,min_crond[i]);

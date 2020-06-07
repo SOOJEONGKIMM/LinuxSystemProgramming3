@@ -31,6 +31,7 @@ char readcrondfile[BUFFER_SIZE][BUFFER_SIZE];
 char checkcrondfile[BUFFER_SIZE][BUFFER_SIZE];
 
 typedef struct _crondtime{
+	pthread_t t_id;
 	char timebuf[BUFFER_SIZE][BUFFER_SIZE];
 	char sysbuf[BUFFER_SIZE];
 	int timeidx;
@@ -39,18 +40,16 @@ typedef struct _crondtime{
 Node *head;
 
 
-//typedef struct _crondtime{
-	pthread_t t_id;
-	int min_crond[MAXTIME];
-	int hour_crond[MAXTIME];
-	int day_crond[MAXTIME];
-	int month_crond[MAXTIME];
-	int weekday_crond[MAXTIME];
-	int mincnt;
-	int hourcnt;
-	int daycnt;
-	int monthcnt;
-	int weekdaycnt;
+int min_crond[MAXTIME];
+int hour_crond[MAXTIME];
+int day_crond[MAXTIME];
+int month_crond[MAXTIME];
+int weekday_crond[MAXTIME];
+int mincnt;
+int hourcnt;
+int daycnt;
+int monthcnt;
+int weekdaycnt;
 
 struct timeval begin_t, end_t;
 
@@ -58,6 +57,7 @@ void read_cronfile();
 void check_cronfile();
 void compare_cronfile();
 void pthread_cmd();
+void* thread_handler(void *arg);
 void get_localtime(char *timestr);
 void read_timecmd(char *str);
 int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt);

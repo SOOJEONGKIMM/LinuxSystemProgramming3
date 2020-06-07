@@ -14,6 +14,7 @@ OBJS3 = $(SRCS3:.c=.o)
 all: $(NAME1) $(NAME2) $(NAME3)
 
 CC = gcc
+lpCC = gcc -pthread
 
 .PHONY = all clean fclean re
 
@@ -23,7 +24,7 @@ $(NAME1) : $(OBJS1)
 $(NAME2) : $(OBJS2)
 	$(CC) -o $@ $<
 $(NAME3) : $(OBJS3)
-	$(CC) -o $@ $<
+	$(lpCC) -o $@ $<
 
 .c.o: ssu_crontab.h ssu_rsync.h ssu_crond.h
 
