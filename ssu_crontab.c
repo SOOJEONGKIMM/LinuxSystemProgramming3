@@ -250,66 +250,71 @@ int do_addOpt(char *str) {
 	char *parser2=NULL;
 	char opbuf[TMP_SIZE];
 	memset(opbuf,0,TMP_SIZE);
-	printf("min:%s\n",min);
+	printf("min1:%s\n",min);
 	int p=0;
 	parser1=min;
-	parser=strpbrk(min,op);
-	opbuf[p]=parser[0];
-	if(opbuf[p]==slash){
-		printf("runcycle range is wrong(not 'range/number')\n");
-		gettimeofday(&end_t, NULL);
-		ssu_runtime(&begin_t, &end_t);
-		printf("\n");
-		return 0;
-	}
-
-	p++;
-	int q=0;
-	while(min!=NULL){
-		sleep(1);
-		parser1=parser;
-		parser=strpbrk(parser1,op);
-		if(parser==NULL)
-			break;
-		parser++;
-		printf("parser1:%s parser:%s min:%s\n",parser1,parser,min);
-		parser2=strpbrk(parser,op);
-		printf("parser1:%s parser2:%s min:%s\n",parser1,parser2,min);
-		char bone[TIME_SIZE][TIME_SIZE];
-		//memset(bone,0,TIME_SIZE);
-		if(parser2!=NULL){
-			strncpy(bone[q],parser,strlen(parser)-strlen(parser2));
-			opbuf[p]=parser2[0];
-			printf("opbuf[%d]:%c\n",p,opbuf[p]);
-			if(parser2[0]=='/'){
-				printf("slash...\n");
-				printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
-				if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
-					printf("runcycle range is wrong(not 'range/number')\n");
-					gettimeofday(&end_t, NULL);
-					ssu_runtime(&begin_t, &end_t);
-					printf("\n");
-					return 0;
-				}
-			}
-		}
-		else
-			strcpy(bone[q],parser);
-		printf("bone[%d]:%s\n",q,bone[q]);
-		int boneint=atoi(bone[q]);
-		printf("boneint:%d\n",boneint);
-		if(boneint<0||boneint>59){
-			printf("runcycle range is wrong\n");
+	parser=strpbrk(parser1,op);
+	printf("parser:%s parser1:%s\n",parser,parser1);
+	int q;
+	if(parser!=NULL){
+		opbuf[p]=parser[0];
+		if(opbuf[p]==slash){
+			printf("runcycle range is wrong(not 'range/number')\n");
 			gettimeofday(&end_t, NULL);
 			ssu_runtime(&begin_t, &end_t);
 			printf("\n");
 			return 0;
 		}
-		if(strlen(parser)!=strlen(bone[q]))
-			parser+=strlen(bone[q]);
-		q++;p++;
+
+		printf("min2:%s\n",min);
+		p++;
+		q=0;
+		while(min!=NULL){
+			sleep(1);
+			parser1=parser;
+			parser=strpbrk(parser1,op);
+			if(parser==NULL)
+				break;
+			parser++;
+			printf("parser1:%s parser:%s min:%s\n",parser1,parser,min);
+			parser2=strpbrk(parser,op);
+			printf("parser1:%s parser2:%s min:%s\n",parser1,parser2,min);
+			char bone[TIME_SIZE][TIME_SIZE];
+			//memset(bone,0,TIME_SIZE);
+			if(parser2!=NULL){
+				strncpy(bone[q],parser,strlen(parser)-strlen(parser2));
+				opbuf[p]=parser2[0];
+				printf("opbuf[%d]:%c\n",p,opbuf[p]);
+				if(parser2[0]=='/'){
+					printf("slash...\n");
+					printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
+					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
+						printf("runcycle range is wrong(not 'range/number')\n");
+						gettimeofday(&end_t, NULL);
+						ssu_runtime(&begin_t, &end_t);
+						printf("\n");
+						return 0;
+					}
+				}
+			}
+			else
+				strcpy(bone[q],parser);
+			printf("bone[%d]:%s\n",q,bone[q]);
+			int boneint=atoi(bone[q]);
+			printf("boneint:%d\n",boneint);
+			if(boneint<0||boneint>59){
+				printf("runcycle range is wrong\n");
+				gettimeofday(&end_t, NULL);
+				ssu_runtime(&begin_t, &end_t);
+				printf("\n");
+				return 0;
+			}
+			if(strlen(parser)!=strlen(bone[q]))
+				parser+=strlen(bone[q]);
+			q++;p++;
+		}
+		printf("min after exceptionhandling:%s\n",min);
 	}
-	printf("min after exceptionhandling:%s\n",min);
 	//free(parser);
 	//free(parser1);
 
@@ -356,58 +361,60 @@ int do_addOpt(char *str) {
 	p=0;
 	parser1=hour;
 	parser=strpbrk(hour,op);
-	opbuf[p]=parser[0];
-	if(opbuf[p]==slash){
-		printf("runcycle range is wrong(not 'range/number')\n");
-		gettimeofday(&end_t, NULL);
-		ssu_runtime(&begin_t, &end_t);
-		printf("\n");
-		return 0;
-	}
-	p++;
-	q=0;
-	while(hour!=NULL){
-		sleep(1);
-		parser1=parser;
-		parser=strpbrk(parser1,op);
-		if(parser==NULL)
-			break;
-		parser++;
-		parser2=strpbrk(parser,op);
-		printf("parser1:%s parser2:%s hour:%s\n",parser1,parser2,hour);
-		char bone[TIME_SIZE][TIME_SIZE];
-		//memset(bone,0,TIME_SIZE);
-		if(parser2!=NULL){
-			strncpy(bone[q],parser,strlen(parser)-strlen(parser2));
-			opbuf[p]=parser2[0];
-			printf("opbuf[%d]:%c\n",p,opbuf[p]);
-			if(parser2[0]=='/'){
-				printf("slash...\n");
-				printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
-				if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
-					printf("runcycle range is wrong(not 'range/number')\n");
-					gettimeofday(&end_t, NULL);
-					ssu_runtime(&begin_t, &end_t);
-					printf("\n");
-					return 0;
-				}
-			}
-		}
-		else
-			strcpy(bone[q],parser);
-		printf("bone[%d]:%s\n",q,bone[q]);
-		int boneint=atoi(bone[q]);
-		printf("boneint:%d\n",boneint);
-		if(boneint<0||boneint>23){
-			printf("runcycle range is wrong\n");
+	if(parser!=NULL){
+		opbuf[p]=parser[0];
+		if(opbuf[p]==slash){
+			printf("runcycle range is wrong(not 'range/number')\n");
 			gettimeofday(&end_t, NULL);
 			ssu_runtime(&begin_t, &end_t);
 			printf("\n");
 			return 0;
 		}
-		if(strlen(parser)!=strlen(bone[q]))
-			parser+=strlen(bone[q]);
-		q++;p++;
+		p++;
+		q=0;
+		while(hour!=NULL){
+			sleep(1);
+			parser1=parser;
+			parser=strpbrk(parser1,op);
+			if(parser==NULL)
+				break;
+			parser++;
+			parser2=strpbrk(parser,op);
+			printf("parser1:%s parser2:%s hour:%s\n",parser1,parser2,hour);
+			char bone[TIME_SIZE][TIME_SIZE];
+			//memset(bone,0,TIME_SIZE);
+			if(parser2!=NULL){
+				strncpy(bone[q],parser,strlen(parser)-strlen(parser2));
+				opbuf[p]=parser2[0];
+				printf("opbuf[%d]:%c\n",p,opbuf[p]);
+				if(parser2[0]=='/'){
+					printf("slash...\n");
+					printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
+					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
+						printf("runcycle range is wrong(not 'range/number')\n");
+						gettimeofday(&end_t, NULL);
+						ssu_runtime(&begin_t, &end_t);
+						printf("\n");
+						return 0;
+					}
+				}
+			}
+			else
+				strcpy(bone[q],parser);
+			printf("bone[%d]:%s\n",q,bone[q]);
+			int boneint=atoi(bone[q]);
+			printf("boneint:%d\n",boneint);
+			if(boneint<0||boneint>23){
+				printf("runcycle range is wrong\n");
+				gettimeofday(&end_t, NULL);
+				ssu_runtime(&begin_t, &end_t);
+				printf("\n");
+				return 0;
+			}
+			if(strlen(parser)!=strlen(bone[q]))
+				parser+=strlen(bone[q]);
+			q++;p++;
+		}
 	}
 
 	//hour 예외처리 
@@ -464,58 +471,60 @@ int do_addOpt(char *str) {
 	p=0;
 	parser1=day;
 	parser=strpbrk(day,op);
-	opbuf[p]=parser[0];
-	if(opbuf[p]==slash){
-		printf("runcycle range is wrong(not 'range/number')\n");
-		gettimeofday(&end_t, NULL);
-		ssu_runtime(&begin_t, &end_t);
-		printf("\n");
-		return 0;
-	}
-	p++;
-	q=0;
-	while(day!=NULL){
-		sleep(1);
-		parser1=parser;
-		parser=strpbrk(parser1,op);
-		if(parser==NULL)
-			break;
-		parser++;
-		parser2=strpbrk(parser,op);
-		printf("parser1:%s parser2:%s day:%s\n",parser1,parser2,day);
-		char bone[TIME_SIZE][TIME_SIZE];
-		//memset(bone,0,TIME_SIZE);
-		if(parser2!=NULL){
-			strncpy(bone[q],parser,strlen(parser)-strlen(parser2));
-			opbuf[p]=parser2[0];
-			printf("opbuf[%d]:%c\n",p,opbuf[p]);
-			if(parser2[0]=='/'){
-				printf("slash...\n");
-				printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
-				if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
-					printf("runcycle range is wrong(not 'range/number')\n");
-					gettimeofday(&end_t, NULL);
-					ssu_runtime(&begin_t, &end_t);
-					printf("\n");
-					return 0;
-				}
-			}
-		}
-		else
-			strcpy(bone[q],parser);
-		printf("bone[%d]:%s\n",q,bone[q]);
-		int boneint=atoi(bone[q]);
-		printf("boneint:%d\n",boneint);
-		if(boneint<0||boneint>31){
-			printf("runcycle range is wrong\n");
+	if(parser!=NULL){
+		opbuf[p]=parser[0];
+		if(opbuf[p]==slash){
+			printf("runcycle range is wrong(not 'range/number')\n");
 			gettimeofday(&end_t, NULL);
 			ssu_runtime(&begin_t, &end_t);
 			printf("\n");
 			return 0;
 		}
-		if(strlen(parser)!=strlen(bone[q]))
-			parser+=strlen(bone[q]);
-		q++;p++;
+		p++;
+		q=0;
+		while(day!=NULL){
+			sleep(1);
+			parser1=parser;
+			parser=strpbrk(parser1,op);
+			if(parser==NULL)
+				break;
+			parser++;
+			parser2=strpbrk(parser,op);
+			printf("parser1:%s parser2:%s day:%s\n",parser1,parser2,day);
+			char bone[TIME_SIZE][TIME_SIZE];
+			//memset(bone,0,TIME_SIZE);
+			if(parser2!=NULL){
+				strncpy(bone[q],parser,strlen(parser)-strlen(parser2));
+				opbuf[p]=parser2[0];
+				printf("opbuf[%d]:%c\n",p,opbuf[p]);
+				if(parser2[0]=='/'){
+					printf("slash...\n");
+					printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
+					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
+						printf("runcycle range is wrong(not 'range/number')\n");
+						gettimeofday(&end_t, NULL);
+						ssu_runtime(&begin_t, &end_t);
+						printf("\n");
+						return 0;
+					}
+				}
+			}
+			else
+				strcpy(bone[q],parser);
+			printf("bone[%d]:%s\n",q,bone[q]);
+			int boneint=atoi(bone[q]);
+			printf("boneint:%d\n",boneint);
+			if(boneint<0||boneint>31){
+				printf("runcycle range is wrong\n");
+				gettimeofday(&end_t, NULL);
+				ssu_runtime(&begin_t, &end_t);
+				printf("\n");
+				return 0;
+			}
+			if(strlen(parser)!=strlen(bone[q]))
+				parser+=strlen(bone[q]);
+			q++;p++;
+		}
 	}
 
 	printf("day after exceptionhandling:%s\n",day);
@@ -561,58 +570,60 @@ int do_addOpt(char *str) {
 	p=0;
 	parser1=month;
 	parser=strpbrk(month,op);
-	opbuf[p]=parser[0];
-	if(opbuf[p]==slash){
-		printf("runcycle range is wrong(not 'range/number')\n");
-		gettimeofday(&end_t, NULL);
-		ssu_runtime(&begin_t, &end_t);
-		printf("\n");
-		return 0;
-	}
-	p++;
-	q=0;
-	while(month!=NULL){
-		sleep(1);
-		parser1=parser;
-		parser=strpbrk(parser1,op);
-		if(parser==NULL)
-			break;
-		parser++;
-		parser2=strpbrk(parser,op);
-		printf("parser1:%s parser2:%s month:%s\n",parser1,parser2,month);
-		char bone[TIME_SIZE][TIME_SIZE];
-		//memset(bone,0,TIME_SIZE);
-		if(parser2!=NULL){
-			strncpy(bone[q],parser,strlen(parser)-strlen(parser2));
-			opbuf[p]=parser2[0];
-			printf("opbuf[%d]:%c\n",p,opbuf[p]);
-			if(parser2[0]=='/'){
-				printf("slash...\n");
-				printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
-				if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
-					printf("runcycle range is wrong(not 'range/number')\n");
-					gettimeofday(&end_t, NULL);
-					ssu_runtime(&begin_t, &end_t);
-					printf("\n");
-					return 0;
-				}
-			}
-		}
-		else
-			strcpy(bone[q],parser);
-		printf("bone[%d]:%s\n",q,bone[q]);
-		int boneint=atoi(bone[q]);
-		printf("boneint:%d\n",boneint);
-		if(boneint<0||boneint>12){
-			printf("runcycle range is wrong\n");
+	if(parser!=NULL){
+		opbuf[p]=parser[0];
+		if(opbuf[p]==slash){
+			printf("runcycle range is wrong(not 'range/number')\n");
 			gettimeofday(&end_t, NULL);
 			ssu_runtime(&begin_t, &end_t);
 			printf("\n");
 			return 0;
 		}
-		if(strlen(parser)!=strlen(bone[q]))
-			parser+=strlen(bone[q]);
-		q++;p++;
+		p++;
+		q=0;
+		while(month!=NULL){
+			sleep(1);
+			parser1=parser;
+			parser=strpbrk(parser1,op);
+			if(parser==NULL)
+				break;
+			parser++;
+			parser2=strpbrk(parser,op);
+			printf("parser1:%s parser2:%s month:%s\n",parser1,parser2,month);
+			char bone[TIME_SIZE][TIME_SIZE];
+			//memset(bone,0,TIME_SIZE);
+			if(parser2!=NULL){
+				strncpy(bone[q],parser,strlen(parser)-strlen(parser2));
+				opbuf[p]=parser2[0];
+				printf("opbuf[%d]:%c\n",p,opbuf[p]);
+				if(parser2[0]=='/'){
+					printf("slash...\n");
+					printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
+					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
+						printf("runcycle range is wrong(not 'range/number')\n");
+						gettimeofday(&end_t, NULL);
+						ssu_runtime(&begin_t, &end_t);
+						printf("\n");
+						return 0;
+					}
+				}
+			}
+			else
+				strcpy(bone[q],parser);
+			printf("bone[%d]:%s\n",q,bone[q]);
+			int boneint=atoi(bone[q]);
+			printf("boneint:%d\n",boneint);
+			if(boneint<0||boneint>12){
+				printf("runcycle range is wrong\n");
+				gettimeofday(&end_t, NULL);
+				ssu_runtime(&begin_t, &end_t);
+				printf("\n");
+				return 0;
+			}
+			if(strlen(parser)!=strlen(bone[q]))
+				parser+=strlen(bone[q]);
+			q++;p++;
+		}
 	}
 	printf("month after exceptionhandling:%s\n",month);
 
@@ -658,58 +669,60 @@ int do_addOpt(char *str) {
 	p=0;
 	parser1=weekday;
 	parser=strpbrk(weekday,op);
-	opbuf[p]=parser[0];
-	if(opbuf[p]==slash){
-		printf("runcycle range is wrong(not 'range/number')\n");
-		gettimeofday(&end_t, NULL);
-		ssu_runtime(&begin_t, &end_t);
-		printf("\n");
-		return 0;
-	}
-	p++;
-	q=0;
-	while(weekday!=NULL){
-		sleep(1);
-		parser1=parser;
-		parser=strpbrk(parser1,op);
-		if(parser==NULL)
-			break;
-		parser++;
-		parser2=strpbrk(parser,op);
-		printf("parser1:%s parser2:%s weekday:%s\n",parser1,parser2,weekday);
-		char bone[TIME_SIZE][TIME_SIZE];
-		//memset(bone,0,TIME_SIZE);
-		if(parser2!=NULL){
-			strncpy(bone[q],parser,strlen(parser)-strlen(parser2));
-			opbuf[p]=parser2[0];
-			printf("opbuf[%d]:%c\n",p,opbuf[p]);
-			if(parser2[0]=='/'){
-				printf("slash...\n");
-				printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
-				if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
-					printf("runcycle range is wrong(not 'range/number')\n");
-					gettimeofday(&end_t, NULL);
-					ssu_runtime(&begin_t, &end_t);
-					printf("\n");
-					return 0;
-				}
-			}
-		}
-		else
-			strcpy(bone[q],parser);
-		printf("bone[%d]:%s\n",q,bone[q]);
-		int boneint=atoi(bone[q]);
-		printf("boneint:%d\n",boneint);
-		if(boneint<0||boneint>6){
-			printf("runcycle range is wrong\n");
+	if(parser!=NULL){
+		opbuf[p]=parser[0];
+		if(opbuf[p]==slash){
+			printf("runcycle range is wrong(not 'range/number')\n");
 			gettimeofday(&end_t, NULL);
 			ssu_runtime(&begin_t, &end_t);
 			printf("\n");
 			return 0;
 		}
-		if(strlen(parser)!=strlen(bone[q]))
-			parser+=strlen(bone[q]);
-		q++;p++;
+		p++;
+		q=0;
+		while(weekday!=NULL){
+			sleep(1);
+			parser1=parser;
+			parser=strpbrk(parser1,op);
+			if(parser==NULL)
+				break;
+			parser++;
+			parser2=strpbrk(parser,op);
+			printf("parser1:%s parser2:%s weekday:%s\n",parser1,parser2,weekday);
+			char bone[TIME_SIZE][TIME_SIZE];
+			//memset(bone,0,TIME_SIZE);
+			if(parser2!=NULL){
+				strncpy(bone[q],parser,strlen(parser)-strlen(parser2));
+				opbuf[p]=parser2[0];
+				printf("opbuf[%d]:%c\n",p,opbuf[p]);
+				if(parser2[0]=='/'){
+					printf("slash...\n");
+					printf("before slash opbuf[%d]:%c\n",p-1,opbuf[p-1]);
+					if(opbuf[p-1]!=slash&&opbuf[p-1]!=bar){
+						printf("runcycle range is wrong(not 'range/number')\n");
+						gettimeofday(&end_t, NULL);
+						ssu_runtime(&begin_t, &end_t);
+						printf("\n");
+						return 0;
+					}
+				}
+			}
+			else
+				strcpy(bone[q],parser);
+			printf("bone[%d]:%s\n",q,bone[q]);
+			int boneint=atoi(bone[q]);
+			printf("boneint:%d\n",boneint);
+			if(boneint<0||boneint>6){
+				printf("runcycle range is wrong\n");
+				gettimeofday(&end_t, NULL);
+				ssu_runtime(&begin_t, &end_t);
+				printf("\n");
+				return 0;
+			}
+			if(strlen(parser)!=strlen(bone[q]))
+				parser+=strlen(bone[q]);
+			q++;p++;
+		}
 	}
 	printf("weekday after exceptionhandling:%s\n",weekday);
 
