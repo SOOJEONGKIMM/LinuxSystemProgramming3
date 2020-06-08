@@ -25,7 +25,6 @@ int main(int argc, char *argv[]){
 		strcpy(src,argv[2]);
 		strcpy(dst,argv[3]);
 		sprintf(cmdstr,"ssu_rsync %s %s %s",argv[1],argv[2],argv[3]);
-		printf("1cmd:%s\n",cmdstr);
 	}
 	else{
 		if(argc!=3){
@@ -97,6 +96,7 @@ int main(int argc, char *argv[]){
 	int samefile=0;
 	int samename=0;
 	int nofile=0;
+	printf("before segment?\n");
 	if(!list_samefilesearch(onlysrcfname,srcmtime, srcfsize)&&!list_samenamesearch(onlysrcfname,JUSTCHECK,NULL)){
 		nofile=1;
 		printf("no file.\n");
@@ -179,7 +179,8 @@ int main(int argc, char *argv[]){
 			newnode=newnode->next;
 		}
 	}
-
+	//list_srcprint();
+	//list_dstprint();
 
 	printf("option:%s src:%s dst:%s\n",option,src,dst);
 	//list_print();
@@ -305,12 +306,16 @@ int rsync_copyF(char *src,char *onlysrcfname,char *dst,char *cmdstr){
 
 	char buf[BUFFER_SIZE];
 	memset(buf,0,BUFFER_SIZE);
-	while(!feof(srcfpr)){
+	int count=0;
+	while((count=(fread(buf,sizeof(char),BUFFER_SIZE,srcfpr)))!=0){
+		fwrite(buf,sizeof(char),count,srcfpw);
+	}
+	/*while(!feof(srcfpr)){
 		fgets(buf,sizeof(buf),srcfpr);
 		fputs(buf,srcfpw);
 		fseek(srcfpw,0,SEEK_END);
-		sprintf(buf,"\n");
-	}
+	//	sprintf(buf,"\n");
+	}*/
 	printf("only:%s\n",onlysrcfname);
 	fclose(srcfpr);
 	fclose(srcfpw);
@@ -323,6 +328,13 @@ int rsync_copyF(char *src,char *onlysrcfname,char *dst,char *cmdstr){
 		fprintf(stderr,"rename error for %s to %s\n",src,newdst);
 		exit(1);
 	}
+	struct stat newstat;
+	lstat(newdst,&newstat);
+	printf("newdst size:%ld\n",newstat.st_size);
+	struct stat tmpstat;
+	lstat(tmpname,&tmpstat);
+	printf("tmpstat size:%ld\n",tmpstat.st_size);
+
 	memset(sigdst,0,PATH_SIZE);
 	strcpy(sigdst,newdst);
 	//tmp를 src이름으로 변경 
@@ -382,12 +394,16 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 			}
 			char buf[BUFFER_SIZE];
 			memset(buf,0,BUFFER_SIZE);
-			while(!feof(srcfpr)){
+	int count=0;
+	while((count=(fread(buf,sizeof(char),BUFFER_SIZE,srcfpr)))!=0){
+		fwrite(buf,sizeof(char),count,srcfpw);
+	}
+	/*		while(!feof(srcfpr)){
 				fgets(buf,sizeof(buf),srcfpr);
 				fputs(buf,srcfpw);
 				fseek(srcfpw,0,SEEK_END);
 				sprintf(buf,"\n");
-			}
+			}*/
 			fclose(srcfpr);
 			fclose(srcfpw);
 		}
@@ -487,12 +503,16 @@ int rsync_replaceF(char *src, char *onlysrcfname,char *dst,char *cmdstr){
 
 	char buf[BUFFER_SIZE];
 	memset(buf,0,BUFFER_SIZE);
-	while(!feof(srcfpr)){
+	int count=0;
+	while((count=(fread(buf,sizeof(char),BUFFER_SIZE,srcfpr)))!=0){
+		fwrite(buf,sizeof(char),count,srcfpw);
+	}
+	/*while(!feof(srcfpr)){
 		fgets(buf,sizeof(buf),srcfpr);
 		fputs(buf,srcfpw);
 		fseek(srcfpw,0,SEEK_END);
 		sprintf(buf,"\n");
-	}
+	}*/
 	printf("only:%s\n",onlysrcfname);
 	fclose(srcfpr);
 	fclose(srcfpw);
@@ -709,7 +729,7 @@ int scan_src(char *srcstr, sNode *srcnode,int nosub,char *logpath){
 			strcpy(node->primfname,flist[i]->d_name);
 
 		}
-		printf("prim:%s\n",node->primfname);
+	//	printf("prim:%s\n",node->primfname);
 
 		memset(srcpath,0,PATH_SIZE);
 		strcpy(node->srcpath,srcstr);//flist[i]->d_name);
@@ -768,8 +788,10 @@ int list_samenamesearch(char *cmpfname,int opt,char *newdst){
 	search=head;
 	bNode *back=(bNode*)malloc(sizeof(bNode));
 	//back=bhead;
+	if(head!=NULL){//dst가 빈디렉토리인경우 예외처리 
 	while(search||back){
-		printf("dst:%s src:%s\n",search->onlydstfname,cmpfname);
+	//	printf("dst:%s src:%s\n",search->onlydstfname,cmpfname);
+	printf("after segment?\n");
 		if(!strcmp(search->onlydstfname,cmpfname)){
 			printf("여기 돌기: fname:%s fpath:%s\n",search->onlydstfname,search->dstpath);
 			if(opt==REPLACEFILE){
@@ -808,18 +830,21 @@ int list_samenamesearch(char *cmpfname,int opt,char *newdst){
 		if(opt==REPLACE)
 			back=back->next;
 	}
+	}
 
 	return 0;//존재하지않는 파일/디렉토리 
 }
 int list_samefilesearch(char *cmpfname,int cmpmtime, long cmpfsize){
 	Node *search;//dst
 	search=head;
+	if(head!=NULL){//dst가 빈디렉토리인경우 예외처리 
 	while(search){
-		printf("src:name:%s mtime:%d size:%ld\n",cmpfname,cmpmtime,cmpfsize);
-		printf("dst:name:%s mtime:%d size:%ld\n",search->onlydstfname,search->mtime,search->fsize);
+	//	printf("src:name:%s mtime:%d size:%ld\n",cmpfname,cmpmtime,cmpfsize);
+	//	printf("dst:name:%s mtime:%d size:%ld\n",search->onlydstfname,search->mtime,search->fsize);
 		if(!strcmp(search->onlydstfname,cmpfname)&&(search->mtime==cmpmtime)&&(search->fsize==cmpfsize))
 			return 1;//존재하는 파일/디렉토리 
 		search=search->next;
+	}
 	}
 	return 0;//존재하지않는 파일/디렉토리 
 }
@@ -832,10 +857,12 @@ void list_dstprint(){
 	printf("<<dst list>>\n");
 	while(cur->next!=NULL){
 		if(cur->dstpath!=NULL)
-			printf("%s\n",cur->dstpath);
+			printf("path: %s\n",cur->dstpath);
+		printf("size: %ld\n",cur->fsize);
 		cur=cur->next;
 	}
-	printf("%s\n",cur->dstpath);
+	printf("path:%s\n",cur->dstpath);
+		printf("size: %ld\n",cur->fsize);
 }
 //src디버깅용 
 void list_srcprint(){
@@ -844,6 +871,7 @@ void list_srcprint(){
 	int i=0;
 	printf("<<src list>>\n");
 	while(cur->next!=NULL){
+		printf("size: %ld\n",cur->fsize);
 		if(cur->srcpath!=NULL)
 			printf("%s\n",cur->srcpath);
 		cur=cur->next;

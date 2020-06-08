@@ -27,9 +27,9 @@
 
 struct timeval begin_t, end_t;
 
-	char tmpdst[PATH_SIZE];
-	char sigdst[PATH_SIZE];
-	char olddst[PATH_SIZE];
+char tmpdst[PATH_SIZE];
+char sigdst[PATH_SIZE];
+char olddst[PATH_SIZE];
 
 //dst
 typedef struct _dnode{
