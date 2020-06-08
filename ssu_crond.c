@@ -6,23 +6,25 @@ int main(void){
 	if(pthread_mutex_init(&mutex,NULL)!=0)
 		fprintf(stderr,"mutex init error\n");
 	read_cronfile();
-
 	while(1){
-		sleep(2);
-		/*check_cronfile();
+		sleep(3);
+		check_cronfile();
 
 		//ssu_crontab()에서 add나 remove된경우 
 		if(update==1){
-		read_cronfile();
-		update=0;
-		}*/
+			read_cronfile();
+			update=0;
+		}
 		list_print();
 		pthread_cmd();
 	}
+
 	return 0;
 }
 void read_cronfile(){
 	head=NULL;
+	if(pthread_mutex_init(&mutex,NULL)!=0)
+		fprintf(stderr,"mutex init error\n");
 	//ssu_crontab_file에서 주기가져옴  
 	FILE *fp;
 	char *cronfile="ssu_crontab_file";
@@ -119,8 +121,8 @@ void pthread_cmd(){
 	node=head;
 	while(node){
 		for(i=0;i<node->timeidx;i++){
-			printf("l:%s",localtime);
-			printf("c:%s",node->timebuf[i]);
+			//printf("l:%s",localtime);
+			//printf("c:%s",node->timebuf[i]);
 			if(!strcmp(localtime,node->timebuf[i])){
 				pthread_t t_id;//thread id
 				printf("TIME IS NOW!!!!!!!!\n");
@@ -144,6 +146,7 @@ void* thread_handler(void *arg){
 		node->t_id=t_id;
 	}
 	system(node->sysbuf);
+	pthread_exit(0);
 
 }
 
@@ -396,9 +399,9 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt){
 					//start++;end++;
 					printf("숫자만작업완료after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 					memset(tokens[row],0,sizeof(tokens[row]));
-				if(strstr(end,",")==NULL){
-					strcpy(tokens[row],end);
-				}
+					if(strstr(end,",")==NULL){
+						strcpy(tokens[row],end);
+					}
 					//strcpy(tokens[row],end);
 					printf("숫자만작업완료after parse calcul tok:%s start:%s end:%s cntslash:%d\n",tokens[row],start,end,cntslash[row]);
 				}
@@ -699,9 +702,16 @@ void startdaemon(){
 
 	//모니터링작업 
 	while(1){
-		sleep(1);
+		sleep(2);
+		check_cronfile();
 
-
+		//ssu_crontab()에서 add나 remove된경우 
+		if(update==1){
+			read_cronfile();
+			update=0;
+		}
+		list_print();
+		pthread_cmd();
 	}
 }
 
