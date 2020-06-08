@@ -53,6 +53,9 @@ void read_cronfile(){
 } 
 //remove나 add로 cronfile 변동이 있는지 체크(무한반복)
 void check_cronfile(){
+	head=NULL;
+	if(pthread_mutex_init(&mutex,NULL)!=0)
+		fprintf(stderr,"mutex init error\n");
 	//ssu_crontab_file에서 주기가져옴  
 	FILE *fp;
 	char *cronfile="ssu_crontab_file";
@@ -78,6 +81,7 @@ void check_cronfile(){
 		memset(cronfilebuf,0,BUFFER_SIZE);
 	}
 	fclose(fp);
+	//compare_cronfile();
 }
 //read_cronfile과 check_cronfile 비교(변동이 있는지 판별) (무한반복)
 void compare_cronfile(){
@@ -104,7 +108,7 @@ void get_localtime(char *timestr){
 	struct tm *t=localtime(&timer);
 
 	memset(timestr,0,TIME_SIZE);
-	sprintf(timestr,"%02d-%02d-%02d-%02d-%02d\n",t->tm_min,t->tm_hour,t->tm_mday,t->tm_mon+1,t->tm_wday);
+	sprintf(timestr,"[%02d-%02d-%02d-%02d-%02d]",t->tm_min,t->tm_hour,t->tm_mday,t->tm_mon+1,t->tm_wday);
 	printf("localtime: %s",timestr);
 }
 //compare localtime & cmdtime 
@@ -117,18 +121,29 @@ void pthread_cmd(){
 	memset(localtime,0,TIME_SIZE);
 	strcpy(localtime,timestr);
 
+	FILE *fp;
+	char *cronfile="ssu_crontab_log";
+	printf("on pthread_cmd...\n");
+
 	Node *node;
 	node=head;
 	while(node){
 		for(i=0;i<node->timeidx;i++){
-			//printf("l:%s",localtime);
-			//printf("c:%s",node->timebuf[i]);
+			printf("l:%s",localtime);
+			printf("c:%s",node->timebuf[i]);
 			if(!strcmp(localtime,node->timebuf[i])){
 				pthread_t t_id;//thread id
 				printf("TIME IS NOW!!!!!!!!\n");
 				node->t_id=t_id;
 				if(pthread_create(&node->t_id,NULL,thread_handler,(void*)node)!=0)
 					fprintf(stderr,"pthread_create() error\n");
+				if((fp=fopen(cronfile,"a"))<0){
+					fprintf(stderr,"fopen error for %s\n",cronfile);
+					exit(1);
+				}
+				fprintf(fp,"%s run %s\n",node->timebuf[i],node->cmdline);
+				fclose(fp);
+
 				pthread_detach(node->t_id);
 
 			}
@@ -146,6 +161,7 @@ void* thread_handler(void *arg){
 		node->t_id=t_id;
 	}
 	system(node->sysbuf);
+
 	pthread_exit(0);
 
 }
@@ -256,7 +272,7 @@ void read_timecmd(char *str){
 		i++;
 	}
 	printf("sys:%s\n",syscmd);
-	make_systimebuf(syscmd);
+	make_systimebuf(str,syscmd);
 
 
 }
@@ -507,7 +523,7 @@ void deliver_crondtime(int *savebuf, int itemcnt,int cntnum){
 
 
 }
-void make_systimebuf(char *syscmd){
+void make_systimebuf(char *cmdline,char *syscmd){
 	int i=0;
 	Node *node=(Node*)malloc(sizeof(Node));
 	memset(node,0,sizeof(node));
@@ -520,7 +536,7 @@ void make_systimebuf(char *syscmd){
 				for(int d=0;d<=monthcnt;d++){
 					for(int e=0;e<=weekdaycnt;e++){
 
-						sprintf(node->timebuf[i],"%02d-%02d-%02d-%02d-%02d\n",min_crond[a],hour_crond[b],day_crond[c],month_crond[d],weekday_crond[e]);
+						sprintf(node->timebuf[i],"[%02d-%02d-%02d-%02d-%02d]",min_crond[a],hour_crond[b],day_crond[c],month_crond[d],weekday_crond[e]);
 						printf("made timestr:%s\n",node->timebuf[i]);
 						i++;
 					}
@@ -531,6 +547,7 @@ void make_systimebuf(char *syscmd){
 	printf("timeidx:%d\n",i);
 	node->timeidx=i;
 	strcpy(node->sysbuf,syscmd);
+	strcpy(node->cmdline,cmdline);
 	list_insert(node);
 
 	memset(min_crond,0,sizeof(min_crond));

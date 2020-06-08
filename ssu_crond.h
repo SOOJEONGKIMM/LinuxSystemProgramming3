@@ -34,6 +34,7 @@ typedef struct _crondtime{
 	pthread_t t_id;
 	char timebuf[BUFFER_SIZE][BUFFER_SIZE];
 	char sysbuf[BUFFER_SIZE];
+	char cmdline[BUFFER_SIZE];//ssu_crontab_log
 	int timeidx;
 	struct _crondtime *next;
 }Node;
@@ -61,7 +62,8 @@ void* thread_handler(void *arg);
 void get_localtime(char *timestr);
 void read_timecmd(char *str);
 int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt);
-void make_systimebuf();
+//void make_systimebuf();
+void make_systimebuf(char *cmdline,char *syscmd);
 void deliver_crondtime(int *savebuf, int itemcnt,int cntnum);
 void count_slash_withbar(char *startcnt, char *endcnt, char *slash, int *savebuf);
 void count_slash(char *cnt, char *slash, int *savebuf,int itemcnt);
