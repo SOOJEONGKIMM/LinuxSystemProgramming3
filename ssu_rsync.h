@@ -21,6 +21,7 @@
 #define OPT_SIZE 8 
 
 #define REPLACE 123467890
+#define REPLACEFILE 23467890
 #define JUSTCHECK 987654321
 #define CHECK 87654321
 
@@ -28,6 +29,7 @@ struct timeval begin_t, end_t;
 
 	char tmpdst[PATH_SIZE];
 	char sigdst[PATH_SIZE];
+	char olddst[PATH_SIZE];
 
 //dst
 typedef struct _dnode{
@@ -84,6 +86,7 @@ int rsync_replaceD(char *src,char *onlysrcdname,char *dst,char *cmdstr);
 int mopt_samefilesearch(char *cmpfname,int cmpmtime, long cmpfsize,char *cmdstr);
 void do_topt(char *src, char *onlysrcfname,char *dst, char *cmdstr,int isdir);
 static void quit_rsync(int signo);
+static void quit_rsync_file(int signo);
 void get_time(char *str);
 void write_rsynclog_timecmd(char *cmdstr);
 void write_rsynclog_files(char *fname, long fsize);
