@@ -15,6 +15,8 @@ int main(int argc, char *argv[]){
 			ssu_runtime(&begin_t, &end_t);
 		exit(1);
 	}
+	char *srcptr=NULL;
+	char *dstptr=NULL;
 	//[OPTION]유무 판별
 	if(!strcmp(argv[1],"-r")||!strcmp(argv[1],"-t")||!strcmp(argv[1],"-m")){
 		if(argc!=4){
@@ -26,10 +28,24 @@ int main(int argc, char *argv[]){
 		strcpy(option,argv[1]);
 		strcpy(src,argv[2]);
 		strcpy(dst,argv[3]);
+		srcptr=src;
+		dstptr=dst;
 		sprintf(cmdstr,"ssu_rsync %s %s %s",argv[1],argv[2],argv[3]);
-		if(strstr(src,"/")==NULL||strstr(dst,"/")==NULL){
-			printf("not path\n");
-			exit(0);
+		if(*srcptr!='.'||*srcptr!='/'){
+			char *src3=(char*)malloc(strlen(srcptr)+strlen("./")+1);
+			*src3=0;
+			strcat(src3,"./");
+			strcat(src3,srcptr);
+			memset(src,0,FILE_SIZE);
+			strcpy(src,src3);
+		}
+		if(*dstptr!='.'||*dstptr!='/'){
+			char *dst3=(char*)malloc(strlen(dstptr)+strlen("./")+1);
+			*dst3=0;
+			strcat(dst3,"./");
+			strcat(dst3,dstptr);
+			memset(dst,0,FILE_SIZE);
+			strcpy(dst,dst3);
 		}
 	}
 	else{
@@ -41,10 +57,25 @@ int main(int argc, char *argv[]){
 		}
 		strcpy(src,argv[1]);
 		strcpy(dst,argv[2]);
+		srcptr=src;
+		dstptr=dst;
 		sprintf(cmdstr,"ssu_rsync %s %s",argv[1],argv[2]);
-		if(strstr(src,"/")==NULL||strstr(dst,"/")==NULL){
-			printf("not path\n");
-			exit(0);
+		if(*srcptr!='.'||*srcptr!='/'){
+			char *src3=(char*)malloc(strlen(srcptr)+strlen("./")+1);
+			*src3=0;
+			strcat(src3,"./");
+			strcat(src3,srcptr);
+			memset(src,0,FILE_SIZE);
+			strcpy(src,src3);
+			printf("src:%s\n",src);
+		}
+		if(*dstptr!='.'||*dstptr!='/'){
+			char *dst3=(char*)malloc(strlen(dstptr)+strlen("./")+1);
+			*dst3=0;
+			strcat(dst3,"./");
+			strcat(dst3,dstptr);
+			memset(dst,0,FILE_SIZE);
+			strcpy(dst,dst3);
 		}
 	}
 	//src 접근권한 확인 
