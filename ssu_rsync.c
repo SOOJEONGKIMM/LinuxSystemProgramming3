@@ -434,7 +434,8 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 				printf("copy sigsrc:%s\n",srcd->sigsrc);
 				write_rsynclog_files(srcd->subpath,srcd->fsize);
 			}//이름만 같은 경우 대체 
-			else if(!list_samefilesearch(srcd->onlysrcfname,srcd->mtime, srcd->fsize)&&list_samenamesearch(srcd->onlysrcfname,CHECK,NULL)){
+			else if(!list_samefilesearch(srcd->onlysrcfname,srcd->mtime, srcd->fsize)&&list_samenamesearch(srcd->onlysrcfname,JUSTCHECK,NULL)){
+				printf("이름만 같은경우!!!!\n");
 				//SIGINT 받는 경우를 위해 dst파일 백업 
 				list_samenamesearch(srcd->onlysrcfname,REPLACE,newdst);
 
@@ -461,10 +462,10 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 		}
 		srcd=srcd->next;
 	}
-		while(1){
+	while(1){
 		sleep(3);
 		printf("testing sigint..\n");
-		}
+	}
 	printf("rsync_copyD\n");
 	return 0;
 }
@@ -578,19 +579,18 @@ static void quit_rsync(int signo){
 		printf("remove dst:%s failed\n",sigdst);
 
 	//대체한 경우 백업해둔 dst 되살리기 
-	sig=shead;
-	while(sig){
-		printf("replacetrue:%d\n",sig->replace);
-		if(sig->replace==1){//replace한 경우 
-			printf("renaming tmp..\n");
-			list_srcprint();
-			printf("tmp:%s    origin:%s\n",sig->tmpdst,sig->origindst);
-			if(rename(sig->tmpdst,sig->origindst)<0){
-				fprintf(stderr,"tmp rename error for %s to %s\n",sig->tmpdst,sig->origindst);
-				//exit(1);
-			}
+	bNode *rep;
+	rep=bhead;
+	while(rep){
+	printf("replacetrue:%d\n",rep->replace);
+	if(rep->replace==1){//replace한 경우 
+		printf("renaming tmp..\n");
+		if(rename(rep->tmpdst,rep->origindst)<0){
+			fprintf(stderr,"rename error for %s to %s\n",rep->tmpdst,rep->origindst);
+			exit(1);
 		}
-		sig=sig->next;
+	}
+	rep=rep->next;
 	}
 
 	printf("got SIGINT(%d).. quiting rsync job..\n",SIGINT);
@@ -636,7 +636,6 @@ int scan_dst(char *dststr, Node *srcnode){
 
 		memset(dstpath,0,PATH_SIZE);
 		strcpy(node->dstpath,dststr);//flist[i]->d_name);
-		printf("스캔dstpath:%s\n",node->dstpath);
 
 		list_dstinsert(node);
 
@@ -755,49 +754,56 @@ void list_srcinsert(sNode *newnode){
 		srcnode->next=newnode;
 	}
 }
-
+void list_backupinsert(bNode *newnode){
+	newnode->next=NULL;
+	if(bhead==NULL)
+		bhead=newnode;
+	else{
+		bNode *srcnode;
+		srcnode=bhead;
+		while(srcnode->next!=NULL)
+			srcnode=srcnode->next;
+		srcnode->next=newnode;
+	}
+}
 //dst디렉토리 내 동일한 파일인지/ 이름만 동일한지 판별 
 int list_samenamesearch(char *cmpfname,int opt,char *newdst){
 	Node *search;//dst
 	search=head;
-	sNode *srcd;
-	srcd=shead;
-	while(search||srcd){
+	bNode *back=(bNode*)malloc(sizeof(bNode));
+	//back=bhead;
+	while(search||back){
 		//printf("dst:%s src:%s\n",search->onlydstfname,cmpfname);
 		if(!strcmp(search->onlydstfname,cmpfname)){
 			//SIGINT 받는 경우 위해 dst 백업 
 			if(opt==REPLACE){
-				printf("REPLACE라서 백업 작업중,,,\n");
 				memset(tmpdst,0,PATH_SIZE);
 				sprintf(tmpdst,"%s_tmp",search->dstpath);
-				printf("dst:%s   tmpdst:%s\n",search->dstpath,tmpdst);
-				srcd->replace=1;
-
 				if(rename(search->dstpath,tmpdst)<0){
 					fprintf(stderr,"rename error for %s to %s\n",search->dstpath,tmpdst);
 					exit(1);
 				}
-				strcpy(srcd->sigsrc,newdst);//src로 대체된dst 
-				strcpy(srcd->origindst,search->dstpath);//기존 dst경로(여기로 tmp를 rename해서 살려줌) 
-				printf("origindst:%s\n",search->dstpath);
-				printf("replace sigsrc:%s\n",srcd->sigsrc);
-				strcpy(srcd->tmpdst,tmpdst);//기존dst백업_SIGINT받으면 살려줌 
-
-				printf("inserting src!!!!!\n");
-				list_srcinsert(srcd);
-				//list_srcprint();
+				back->replace=1;
+				strcpy(back->newdst,newdst);//src로 대체된dst 
+				printf("replace sigsrc:%s\n",back->newdst);
+				strcpy(back->tmpdst,tmpdst);//기존dst백업_SIGINT받으면 살려줌 
+				strcpy(back->origindst,search->dstpath);
+				printf("SIGINT위해 백업중\n");
+				printf("tmp:%s   origin:%s   new:%s\n",back->tmpdst,back->origindst,back->newdst);
+		list_backupinsert(back);
 			}
 
 			return 1;//존재하는 파일/디렉토리 
 		}
-		//if(opt!=REPLACE){
-		if(search->next==NULL)
-			break;
-		//}
-		if(opt==REPLACE||opt==CHECK)
-			srcd=srcd->next;
 		search=search->next;
+		if(opt!=REPLACE){
+			if(search->next==NULL)
+				break;
+		}
+		if(opt==REPLACE)
+			back=back->next;
 	}
+	//if(opt==REPLACE)
 
 	return 0;//존재하지않는 파일/디렉토리 
 }
@@ -805,8 +811,8 @@ int list_samefilesearch(char *cmpfname,int cmpmtime, long cmpfsize){
 	Node *search;//dst
 	search=head;
 	while(search){
-		//	printf("src:name:%s mtime:%d size:%ld\n",cmpfname,cmpmtime,cmpfsize);
-		//	printf("dst:name:%s mtime:%d size:%ld\n",search->onlydstfname,search->mtime,search->fsize);
+		printf("src:name:%s mtime:%d size:%ld\n",cmpfname,cmpmtime,cmpfsize);
+		printf("dst:name:%s mtime:%d size:%ld\n",search->onlydstfname,search->mtime,search->fsize);
 		if(!strcmp(search->onlydstfname,cmpfname)&&(search->mtime==cmpmtime)&&(search->fsize==cmpfsize))
 			return 1;//존재하는 파일/디렉토리 
 		search=search->next;
@@ -834,7 +840,6 @@ void list_srcprint(){
 	int i=0;
 	printf("<<src list>>\n");
 	while(cur->next!=NULL){
-		printf("path:%s  tmp:%s  replace:%d\n",cur->origindst,cur->tmpdst,cur->replace);
 		if(cur->srcpath!=NULL)
 			printf("%s\n",cur->srcpath);
 		cur=cur->next;
