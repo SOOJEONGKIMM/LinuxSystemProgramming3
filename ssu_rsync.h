@@ -22,6 +22,7 @@
 
 #define REPLACE 123467890
 #define JUSTCHECK 987654321
+#define CHECK 87654321
 
 struct timeval begin_t, end_t;
 
@@ -46,7 +47,8 @@ typedef struct _snode{
 	char logpath[FILE_SIZE];
 	char subpath[FILE_SIZE];
 	char sigsrc[FILE_SIZE];//SIGINT받는경우 백업tmpdst를 sigsrc로 살려줌 
-	char tmpdst[BUFFER_SIZE];//SIGINT받는경우 
+	char tmpdst[BUFFER_SIZE];//SIGINT받는경우 (기존dst를 백업한곳) 
+	char origindst[BUFFER_SIZE];//SIGINT받는경우 (기존dst)
 	int replace;//1 if replace
 	int mtime;
 	long fsize;
@@ -54,11 +56,22 @@ typedef struct _snode{
 }sNode;
 sNode *shead;
 
+//대체 백업 위한 노드
+typedef struct _bnode{
+	char newdst[FILE_SIZE];//SIGINT받는경우 백업tmpdst를 sigsrc로 살려줌 
+	char tmpdst[BUFFER_SIZE];//SIGINT받는경우 (기존dst를 백업한곳) 
+	char origindst[BUFFER_SIZE];//SIGINT받는경우 (기존dst)
+	int replace;//1 if replace
+	struct _bnode *next;
+}bNode;
+bNode *bhead;
+
 
 int scan_dst(char *dststr, Node *srcnode);
 int scan_src(char *srcstr, sNode *srcnode,int nosub,char *logpath);
 void list_dstinsert(Node *newnode);
 void list_srcinsert(sNode *newnode);
+void list_backupinsert(bNode *newnode);
 void list_dstprint();
 void list_srcprint();
 int list_samenamesearch(char *cmpfname,int opt,char *newdst);
