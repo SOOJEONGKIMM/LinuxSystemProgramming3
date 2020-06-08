@@ -398,7 +398,7 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 	list_srcprint();
 	sNode *srcd;
 	srcd=shead;
-	if(shead->next!=NULL)//빈디렉토리 
+	//if(shead->next!=NULL)//빈디렉토리 
 		write_rsynclog_timecmd(cmdstr);
 	while(srcd){
 
