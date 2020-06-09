@@ -259,8 +259,8 @@ int do_addOpt(char *str) {
 	int q;
 	char *parser3;
 	if(parser!=NULL){
-	parser3=(char*)malloc(strlen(parser));
-	parser3=NULL;
+		parser3=(char*)malloc(strlen(parser));
+		parser3=NULL;
 		//memset(parser3,0,sizeof(parser3));
 		parser3=parser;
 		if(parser3[0]=='-'){//num1-num2에서 num1이 num2보다 큰경우 예외처리 
@@ -291,10 +291,15 @@ int do_addOpt(char *str) {
 				printf("num1:%s\n",num1);
 				printf("parser3 add2:%s\n",parser3);
 				memset(num2,0,sizeof(num2));
-				if(isdigit(parser3[1]))//두글자숫자
+				if(isdigit(parser3[1])){//두글자숫자
 					strncpy(num2,parser3,2);
-				else
+					parser3++;
+					parser3++;
+				}
+				else{
 					strncpy(num2,parser3,1);
+					parser3++;
+				}
 				printf("num2:%s\n",num2);
 				int numm1=atoi(num1);
 				int numm2=atoi(num2);
@@ -306,6 +311,31 @@ int do_addOpt(char *str) {
 					ssu_runtime(&begin_t, &end_t);
 					printf("\n");
 					return 0;
+				}
+				//범위/주기 일때 주기가 범위보다 큰 경우 예외처리
+				if(parser3[0]=='/'){
+					parser3++;
+					char *repeat;
+					if(isdigit(parser3[0])&&isdigit(parser3[1])){
+						repeat=(char*)malloc(2);
+						memset(repeat,0,sizeof(repeat));
+						strncpy(repeat,parser3,2);
+						printf("repeat2: %s\n",repeat);
+					}
+					else if(isdigit(parser3[0])&&!isdigit(parser3[1])){
+						repeat=(char*)malloc(1);
+						memset(repeat,0,sizeof(repeat));
+						strncpy(repeat,parser3,1);
+						printf("repeat1: %s\n",repeat);
+					}
+					int repeatt=atoi(repeat);
+					if((numm2-numm1)<repeatt){
+						printf("runcycle range is wrong(not 'repeat number is bigger than range')\n");
+						gettimeofday(&end_t, NULL);
+						ssu_runtime(&begin_t, &end_t);
+						printf("\n");
+						return 0;
+					}
 				}
 			}
 		}
@@ -375,10 +405,14 @@ int do_addOpt(char *str) {
 						}
 						printf("num1:%s\n",num1);
 						printf("parser2 /뒤로 두칸:%s\n",parser2);
-						if(isdigit(parser2[1]))//두글자숫자
+						if(isdigit(parser2[1])){//두글자숫자
 							strncpy(num2,parser2,2);
+							parser2++;
+							parser2++;
+						}
 						else{
 							strncpy(num2,parser2,1);
+							parser2++;
 						}
 						printf("num2:%s\n",num2);
 						int numm1=atoi(num1);
@@ -391,6 +425,34 @@ int do_addOpt(char *str) {
 							ssu_runtime(&begin_t, &end_t);
 							printf("\n");
 							return 0;
+						}
+						printf("parserrrrrrrrrrrrrrri2:%s\n",parser2);
+						printf("parserrrrrrrrrrrrrrri2:  %c   %c\n",parser2[1],parser2[2]);
+						//범위/주기 일때 주기가 범위보다 큰 경우 예외처리
+						if(parser2[0]=='/'){
+							parser2++;
+							printf("parserrrrrrrrrrrrrrri2:%s\n",parser2);
+							char *repeat;
+							if(isdigit(parser2[0])&&isdigit(parser2[1])){
+								repeat=(char*)malloc(2);
+								memset(repeat,0,sizeof(repeat));
+								strncpy(repeat,parser2,2);
+								printf("repeat2: %s\n",repeat);
+							}
+							else if(isdigit(parser2[0])&&!isdigit(parser2[1])){
+								repeat=(char*)malloc(1);
+								memset(repeat,0,sizeof(repeat));
+								strncpy(repeat,parser2,1);
+								printf("repeat1: %s\n",repeat);
+							}
+							int repeatt=atoi(repeat);
+							if((numm2-numm1)<repeatt){
+								printf("runcycle range is wrong(not 'repeat number is bigger than range')\n");
+								gettimeofday(&end_t, NULL);
+								ssu_runtime(&begin_t, &end_t);
+								printf("\n");
+								return 0;
+							}
 						}
 					}
 				}
@@ -460,56 +522,86 @@ int do_addOpt(char *str) {
 	parser1=hour;
 	parser=strpbrk(hour,op);
 	if(parser!=NULL){
-	parser3=(char*)malloc(strlen(parser+1));
-	parser3=NULL;
-	//memset(parser3,0,sizeof(parser3));
-	parser3=parser;
-	if(parser3[0]=='-'){//num1-num2에서 num1이 num2보다 큰경우 예외처리 
-		printf("bar...\n");
-		parser3--;
-		parser3--;
-		printf("before bar parser--:%s\n",parser3);
-		if(isdigit(parser3[1])){
-			//printf("parser2 앞으로 두칸:%s\n",parser2);
-			char *num1=(char*)malloc(2);
-			char *num2=(char*)malloc(2);
-			memset(num1,0,sizeof(num1));
-			if(isdigit(parser3[0])&&isdigit(parser3[1])){//두글자숫자
-				printf("two number\n");
-				strncpy(num1,parser3,2);
-				parser3++;
-				parser3++;
-				parser3++;
-			}
-			else if(!isdigit(parser3[0])&&isdigit(parser3[1])){//한글자숫자
-				printf("one number\n");
-				parser3++;
-				printf("parser3:%s\n",parser3);
-				strncpy(num1,parser3,1);
-				parser3++;
-				parser3++;
-			}
-			printf("num1:%s\n",num1);
-			printf("parser3 add2:%s\n",parser3);
-			memset(num2,0,sizeof(num2));
-			if(isdigit(parser3[1]))//두글자숫자
-				strncpy(num2,parser3,2);
-			else
-				strncpy(num2,parser3,1);
-			printf("num2:%s\n",num2);
-			int numm1=atoi(num1);
-			int numm2=atoi(num2);
-			printf("int numm1:%d\n",numm1);
-			printf("int numm2:%d\n",numm2);
-			if(numm1>numm2){
-				printf("runcycle range is wrong(not 'range/number')\n");
-				gettimeofday(&end_t, NULL);
-				ssu_runtime(&begin_t, &end_t);
-				printf("\n");
-				return 0;
+		parser3=(char*)malloc(strlen(parser+1));
+		parser3=NULL;
+		//memset(parser3,0,sizeof(parser3));
+		parser3=parser;
+		if(parser3[0]=='-'){//num1-num2에서 num1이 num2보다 큰경우 예외처리 
+			printf("bar...\n");
+			parser3--;
+			parser3--;
+			printf("before bar parser--:%s\n",parser3);
+			if(isdigit(parser3[1])){
+				//printf("parser2 앞으로 두칸:%s\n",parser2);
+				char *num1=(char*)malloc(2);
+				char *num2=(char*)malloc(2);
+				memset(num1,0,sizeof(num1));
+				if(isdigit(parser3[0])&&isdigit(parser3[1])){//두글자숫자
+					printf("two number\n");
+					strncpy(num1,parser3,2);
+					parser3++;
+					parser3++;
+					parser3++;
+				}
+				else if(!isdigit(parser3[0])&&isdigit(parser3[1])){//한글자숫자
+					printf("one number\n");
+					parser3++;
+					printf("parser3:%s\n",parser3);
+					strncpy(num1,parser3,1);
+					parser3++;
+					parser3++;
+				}
+				printf("num1:%s\n",num1);
+				printf("parser3 add2:%s\n",parser3);
+				memset(num2,0,sizeof(num2));
+				if(isdigit(parser3[1])){//두글자숫자
+					strncpy(num2,parser3,2);
+					parser3++;
+					parser3++;
+				}
+				else{
+					strncpy(num2,parser3,1);
+					parser3++;
+				}
+				printf("num2:%s\n",num2);
+				int numm1=atoi(num1);
+				int numm2=atoi(num2);
+				printf("int numm1:%d\n",numm1);
+				printf("int numm2:%d\n",numm2);
+				if(numm1>numm2){
+					printf("runcycle range is wrong(not 'range/number')\n");
+					gettimeofday(&end_t, NULL);
+					ssu_runtime(&begin_t, &end_t);
+					printf("\n");
+					return 0;
+				}
+				//범위/주기 일때 주기가 범위보다 큰 경우 예외처리
+				if(parser3[0]=='/'){
+					parser3++;
+					char *repeat;
+					if(isdigit(parser3[0])&&isdigit(parser3[1])){
+						repeat=(char*)malloc(2);
+						memset(repeat,0,sizeof(repeat));
+						strncpy(repeat,parser3,2);
+						printf("repeat2: %s\n",repeat);
+					}
+					else if(isdigit(parser3[0])&&!isdigit(parser3[1])){
+						repeat=(char*)malloc(1);
+						memset(repeat,0,sizeof(repeat));
+						strncpy(repeat,parser3,1);
+						printf("repeat1: %s\n",repeat);
+					}
+					int repeatt=atoi(repeat);
+					if((numm2-numm1)<repeatt){
+						printf("runcycle range is wrong(not 'repeat number is bigger than range')\n");
+						gettimeofday(&end_t, NULL);
+						ssu_runtime(&begin_t, &end_t);
+						printf("\n");
+						return 0;
+					}
+				}
 			}
 		}
-	}
 		opbuf[p]=parser[0];
 		if(opbuf[p]==slash){
 			printf("runcycle range is wrong(not 'range/number')\n");
@@ -573,10 +665,14 @@ int do_addOpt(char *str) {
 						}
 						printf("num1:%s\n",num1);
 						printf("parser2 /뒤로 두칸:%s\n",parser2);
-						if(isdigit(parser2[1]))//두글자숫자
+						if(isdigit(parser2[1])){//두글자숫자
 							strncpy(num2,parser2,2);
+							parser2++;
+							parser2++;
+						}
 						else{
 							strncpy(num2,parser2,1);
+							parser2++;
 						}
 						printf("num2:%s\n",num2);
 						int numm1=atoi(num1);
@@ -589,6 +685,32 @@ int do_addOpt(char *str) {
 							ssu_runtime(&begin_t, &end_t);
 							printf("\n");
 							return 0;
+						}
+						//범위/주기 일때 주기가 범위보다 큰 경우 예외처리
+						if(parser2[0]=='/'){
+							parser2++;
+							printf("parserrrrrrrrrrrrrrri2:%s\n",parser2);
+							char *repeat;
+							if(isdigit(parser2[0])&&isdigit(parser2[1])){
+								repeat=(char*)malloc(2);
+								memset(repeat,0,sizeof(repeat));
+								strncpy(repeat,parser2,2);
+								printf("repeat2: %s\n",repeat);
+							}
+							else if(isdigit(parser2[0])&&!isdigit(parser2[1])){
+								repeat=(char*)malloc(1);
+								memset(repeat,0,sizeof(repeat));
+								strncpy(repeat,parser2,1);
+								printf("repeat1: %s\n",repeat);
+							}
+							int repeatt=atoi(repeat);
+							if((numm2-numm1)<repeatt){
+								printf("runcycle range is wrong(not 'repeat number is bigger than range')\n");
+								gettimeofday(&end_t, NULL);
+								ssu_runtime(&begin_t, &end_t);
+								printf("\n");
+								return 0;
+							}
 						}
 					}
 				}
@@ -667,53 +789,83 @@ int do_addOpt(char *str) {
 	parser=strpbrk(day,op);
 	if(parser!=NULL){
 		parser3=NULL;
-	parser3=parser;
-	if(parser3[0]=='-'){//num1-num2에서 num1이 num2보다 큰경우 예외처리 
-		printf("bar...\n");
-		parser3--;
-		parser3--;
-		printf("before bar parser--:%s\n",parser3);
-		if(isdigit(parser3[1])){
-			//printf("parser2 앞으로 두칸:%s\n",parser2);
-			char *num1=(char*)malloc(2);
-			char *num2=(char*)malloc(2);
-			memset(num1,0,sizeof(num1));
-			if(isdigit(parser3[0])&&isdigit(parser3[1])){//두글자숫자
-				printf("two number\n");
-				strncpy(num1,parser3,2);
-				parser3++;
-				parser3++;
-				parser3++;
-			}
-			else if(!isdigit(parser3[0])&&isdigit(parser3[1])){//한글자숫자
-				printf("one number\n");
-				parser3++;
-				printf("parser3:%s\n",parser3);
-				strncpy(num1,parser3,1);
-				parser3++;
-				parser3++;
-			}
-			printf("num1:%s\n",num1);
-			printf("parser3 add2:%s\n",parser3);
-			memset(num2,0,sizeof(num2));
-			if(isdigit(parser3[1]))//두글자숫자
-				strncpy(num2,parser3,2);
-			else
-				strncpy(num2,parser3,1);
-			printf("num2:%s\n",num2);
-			int numm1=atoi(num1);
-			int numm2=atoi(num2);
-			printf("int numm1:%d\n",numm1);
-			printf("int numm2:%d\n",numm2);
-			if(numm1>numm2){
-				printf("runcycle range is wrong(not 'range/number')\n");
-				gettimeofday(&end_t, NULL);
-				ssu_runtime(&begin_t, &end_t);
-				printf("\n");
-				return 0;
+		parser3=parser;
+		if(parser3[0]=='-'){//num1-num2에서 num1이 num2보다 큰경우 예외처리 
+			printf("bar...\n");
+			parser3--;
+			parser3--;
+			printf("before bar parser--:%s\n",parser3);
+			if(isdigit(parser3[1])){
+				//printf("parser2 앞으로 두칸:%s\n",parser2);
+				char *num1=(char*)malloc(2);
+				char *num2=(char*)malloc(2);
+				memset(num1,0,sizeof(num1));
+				if(isdigit(parser3[0])&&isdigit(parser3[1])){//두글자숫자
+					printf("two number\n");
+					strncpy(num1,parser3,2);
+					parser3++;
+					parser3++;
+					parser3++;
+				}
+				else if(!isdigit(parser3[0])&&isdigit(parser3[1])){//한글자숫자
+					printf("one number\n");
+					parser3++;
+					printf("parser3:%s\n",parser3);
+					strncpy(num1,parser3,1);
+					parser3++;
+					parser3++;
+				}
+				printf("num1:%s\n",num1);
+				printf("parser3 add2:%s\n",parser3);
+				memset(num2,0,sizeof(num2));
+				if(isdigit(parser3[1])){//두글자숫자
+					strncpy(num2,parser3,2);
+					parser3++;
+					parser3++;
+				}
+				else{
+					strncpy(num2,parser3,1);
+					parser3++;
+				}
+				printf("num2:%s\n",num2);
+				int numm1=atoi(num1);
+				int numm2=atoi(num2);
+				printf("int numm1:%d\n",numm1);
+				printf("int numm2:%d\n",numm2);
+				if(numm1>numm2){
+					printf("runcycle range is wrong(not 'range/number')\n");
+					gettimeofday(&end_t, NULL);
+					ssu_runtime(&begin_t, &end_t);
+					printf("\n");
+					return 0;
+				}
+				//범위/주기 일때 주기가 범위보다 큰 경우 예외처리
+				if(parser3[0]=='/'){
+					parser3++;
+					char *repeat;
+					if(isdigit(parser3[0])&&isdigit(parser3[1])){
+						repeat=(char*)malloc(2);
+						memset(repeat,0,sizeof(repeat));
+						strncpy(repeat,parser3,2);
+						printf("repeat2: %s\n",repeat);
+					}
+					else if(isdigit(parser3[0])&&!isdigit(parser3[1])){
+						repeat=(char*)malloc(1);
+						memset(repeat,0,sizeof(repeat));
+						strncpy(repeat,parser3,1);
+						printf("repeat1: %s\n",repeat);
+					}
+					int repeatt=atoi(repeat);
+					if((numm2-numm1)<repeatt){
+						printf("runcycle range is wrong(not 'repeat number is bigger than range')\n");
+						gettimeofday(&end_t, NULL);
+						ssu_runtime(&begin_t, &end_t);
+						printf("\n");
+						return 0;
+					}
+				}
 			}
 		}
-	}
 		opbuf[p]=parser[0];
 		if(opbuf[p]==slash){
 			printf("runcycle range is wrong(not 'range/number')\n");
@@ -777,10 +929,14 @@ int do_addOpt(char *str) {
 						}
 						printf("num1:%s\n",num1);
 						printf("parser2 /뒤로 두칸:%s\n",parser2);
-						if(isdigit(parser2[1]))//두글자숫자
+						if(isdigit(parser2[1])){//두글자숫자
 							strncpy(num2,parser2,2);
+							parser2++;
+							parser2++;
+						}
 						else{
 							strncpy(num2,parser2,1);
+							parser2++;
 						}
 						printf("num2:%s\n",num2);
 						int numm1=atoi(num1);
@@ -793,6 +949,32 @@ int do_addOpt(char *str) {
 							ssu_runtime(&begin_t, &end_t);
 							printf("\n");
 							return 0;
+						}
+						//범위/주기 일때 주기가 범위보다 큰 경우 예외처리
+						if(parser2[0]=='/'){
+							parser2++;
+							printf("parserrrrrrrrrrrrrrri2:%s\n",parser2);
+							char *repeat;
+							if(isdigit(parser2[0])&&isdigit(parser2[1])){
+								repeat=(char*)malloc(2);
+								memset(repeat,0,sizeof(repeat));
+								strncpy(repeat,parser2,2);
+								printf("repeat2: %s\n",repeat);
+							}
+							else if(isdigit(parser2[0])&&!isdigit(parser2[1])){
+								repeat=(char*)malloc(1);
+								memset(repeat,0,sizeof(repeat));
+								strncpy(repeat,parser2,1);
+								printf("repeat1: %s\n",repeat);
+							}
+							int repeatt=atoi(repeat);
+							if((numm2-numm1)<repeatt){
+								printf("runcycle range is wrong(not 'repeat number is bigger than range')\n");
+								gettimeofday(&end_t, NULL);
+								ssu_runtime(&begin_t, &end_t);
+								printf("\n");
+								return 0;
+							}
 						}
 					}
 				}
@@ -860,53 +1042,83 @@ int do_addOpt(char *str) {
 	parser=strpbrk(month,op);
 	if(parser!=NULL){
 		parser3=NULL;
-	parser3=parser;
-	if(parser3[0]=='-'){//num1-num2에서 num1이 num2보다 큰경우 예외처리 
-		printf("bar...\n");
-		parser3--;
-		parser3--;
-		printf("before bar parser--:%s\n",parser3);
-		if(isdigit(parser3[1])){
-			//printf("parser2 앞으로 두칸:%s\n",parser2);
-			char *num1=(char*)malloc(2);
-			char *num2=(char*)malloc(2);
-			memset(num1,0,sizeof(num1));
-			if(isdigit(parser3[0])&&isdigit(parser3[1])){//두글자숫자
-				printf("two number\n");
-				strncpy(num1,parser3,2);
-				parser3++;
-				parser3++;
-				parser3++;
-			}
-			else if(!isdigit(parser3[0])&&isdigit(parser3[1])){//한글자숫자
-				printf("one number\n");
-				parser3++;
-				printf("parser3:%s\n",parser3);
-				strncpy(num1,parser3,1);
-				parser3++;
-				parser3++;
-			}
-			printf("num1:%s\n",num1);
-			printf("parser3 add2:%s\n",parser3);
-			memset(num2,0,sizeof(num2));
-			if(isdigit(parser3[1]))//두글자숫자
-				strncpy(num2,parser3,2);
-			else
-				strncpy(num2,parser3,1);
-			printf("num2:%s\n",num2);
-			int numm1=atoi(num1);
-			int numm2=atoi(num2);
-			printf("int numm1:%d\n",numm1);
-			printf("int numm2:%d\n",numm2);
-			if(numm1>numm2){
-				printf("runcycle range is wrong(not 'range/number')\n");
-				gettimeofday(&end_t, NULL);
-				ssu_runtime(&begin_t, &end_t);
-				printf("\n");
-				return 0;
+		parser3=parser;
+		if(parser3[0]=='-'){//num1-num2에서 num1이 num2보다 큰경우 예외처리 
+			printf("bar...\n");
+			parser3--;
+			parser3--;
+			printf("before bar parser--:%s\n",parser3);
+			if(isdigit(parser3[1])){
+				//printf("parser2 앞으로 두칸:%s\n",parser2);
+				char *num1=(char*)malloc(2);
+				char *num2=(char*)malloc(2);
+				memset(num1,0,sizeof(num1));
+				if(isdigit(parser3[0])&&isdigit(parser3[1])){//두글자숫자
+					printf("two number\n");
+					strncpy(num1,parser3,2);
+					parser3++;
+					parser3++;
+					parser3++;
+				}
+				else if(!isdigit(parser3[0])&&isdigit(parser3[1])){//한글자숫자
+					printf("one number\n");
+					parser3++;
+					printf("parser3:%s\n",parser3);
+					strncpy(num1,parser3,1);
+					parser3++;
+					parser3++;
+				}
+				printf("num1:%s\n",num1);
+				printf("parser3 add2:%s\n",parser3);
+				memset(num2,0,sizeof(num2));
+				if(isdigit(parser3[1])){//두글자숫자
+					strncpy(num2,parser3,2);
+					parser3++;
+					parser3++;
+				}
+				else{
+					strncpy(num2,parser3,1);
+					parser3++;
+				}
+				printf("num2:%s\n",num2);
+				int numm1=atoi(num1);
+				int numm2=atoi(num2);
+				printf("int numm1:%d\n",numm1);
+				printf("int numm2:%d\n",numm2);
+				if(numm1>numm2){
+					printf("runcycle range is wrong(not 'range/number')\n");
+					gettimeofday(&end_t, NULL);
+					ssu_runtime(&begin_t, &end_t);
+					printf("\n");
+					return 0;
+				}
+				//범위/주기 일때 주기가 범위보다 큰 경우 예외처리
+				if(parser3[0]=='/'){
+					parser3++;
+					char *repeat;
+					if(isdigit(parser3[0])&&isdigit(parser3[1])){
+						repeat=(char*)malloc(2);
+						memset(repeat,0,sizeof(repeat));
+						strncpy(repeat,parser3,2);
+						printf("repeat2: %s\n",repeat);
+					}
+					else if(isdigit(parser3[0])&&!isdigit(parser3[1])){
+						repeat=(char*)malloc(1);
+						memset(repeat,0,sizeof(repeat));
+						strncpy(repeat,parser3,1);
+						printf("repeat1: %s\n",repeat);
+					}
+					int repeatt=atoi(repeat);
+					if((numm2-numm1)<repeatt){
+						printf("runcycle range is wrong(not 'repeat number is bigger than range')\n");
+						gettimeofday(&end_t, NULL);
+						ssu_runtime(&begin_t, &end_t);
+						printf("\n");
+						return 0;
+					}
+				}
 			}
 		}
-	}
 		opbuf[p]=parser[0];
 		if(opbuf[p]==slash){
 			printf("runcycle range is wrong(not 'range/number')\n");
@@ -970,10 +1182,14 @@ int do_addOpt(char *str) {
 						}
 						printf("num1:%s\n",num1);
 						printf("parser2 /뒤로 두칸:%s\n",parser2);
-						if(isdigit(parser2[1]))//두글자숫자
+						if(isdigit(parser2[1])){//두글자숫자
 							strncpy(num2,parser2,2);
+							parser2++;
+							parser2++;
+						}
 						else{
 							strncpy(num2,parser2,1);
+							parser2++;
 						}
 						printf("num2:%s\n",num2);
 						int numm1=atoi(num1);
@@ -986,6 +1202,32 @@ int do_addOpt(char *str) {
 							ssu_runtime(&begin_t, &end_t);
 							printf("\n");
 							return 0;
+						}
+						//범위/주기 일때 주기가 범위보다 큰 경우 예외처리
+						if(parser2[0]=='/'){
+							parser2++;
+							printf("parserrrrrrrrrrrrrrri2:%s\n",parser2);
+							char *repeat;
+							if(isdigit(parser2[0])&&isdigit(parser2[1])){
+								repeat=(char*)malloc(2);
+								memset(repeat,0,sizeof(repeat));
+								strncpy(repeat,parser2,2);
+								printf("repeat2: %s\n",repeat);
+							}
+							else if(isdigit(parser2[0])&&!isdigit(parser2[1])){
+								repeat=(char*)malloc(1);
+								memset(repeat,0,sizeof(repeat));
+								strncpy(repeat,parser2,1);
+								printf("repeat1: %s\n",repeat);
+							}
+							int repeatt=atoi(repeat);
+							if((numm2-numm1)<repeatt){
+								printf("runcycle range is wrong(not 'repeat number is bigger than range')\n");
+								gettimeofday(&end_t, NULL);
+								ssu_runtime(&begin_t, &end_t);
+								printf("\n");
+								return 0;
+							}
 						}
 					}
 				}
@@ -1054,59 +1296,89 @@ int do_addOpt(char *str) {
 	parser1=weekday;
 	parser=strpbrk(weekday,op);
 	if(parser!=NULL){
-	printf("111min%s hour%s day%s month%s week%s sys%s\n",min,hour,day,month,weekday,syscmd);
-	parser3=NULL;
-	//memset(parser3,0,sizeof(parser3));
-	printf("22min%s hour%s day%s month%s week%s sys%s\n",min,hour,day,month,weekday,syscmd);
-	parser3=parser;
-	printf("min%s hour%s day%s month%s week%s sys%s\n",min,hour,day,month,weekday,syscmd);
-	if(parser3[0]=='-'){//num1-num2에서 num1이 num2보다 큰경우 예외처리 
-		printf("bar...\n");
-		parser3--;
-		parser3--;
-		printf("before bar parser--:%s\n",parser3);
-		if(isdigit(parser3[1])){
-			//printf("parser2 앞으로 두칸:%s\n",parser2);
-			char *num1=(char*)malloc(2);
-			char *num2=(char*)malloc(2);
-			memset(num1,0,sizeof(num1));
-			if(isdigit(parser3[0])&&isdigit(parser3[1])){//두글자숫자
-				printf("two number\n");
-				strncpy(num1,parser3,2);
-				parser3++;
-				parser3++;
-				parser3++;
-			}
-			else if(!isdigit(parser3[0])&&isdigit(parser3[1])){//한글자숫자
-				printf("one number\n");
-				parser3++;
-				printf("parser3:%s\n",parser3);
-				strncpy(num1,parser3,1);
-				parser3++;
-				parser3++;
-			}
-			printf("num1:%s\n",num1);
-			printf("parser3 add2:%s\n",parser3);
-			memset(num2,0,sizeof(num2));
-			if(isdigit(parser3[1]))//두글자숫자
-				strncpy(num2,parser3,2);
-			else
-				strncpy(num2,parser3,1);
-			printf("num2:%s\n",num2);
-			int numm1=atoi(num1);
-			int numm2=atoi(num2);
-			printf("int numm1:%d\n",numm1);
-			printf("int numm2:%d\n",numm2);
-			if(numm1>numm2){
-				printf("runcycle range is wrong(not 'range/number')\n");
-				gettimeofday(&end_t, NULL);
-				ssu_runtime(&begin_t, &end_t);
-				printf("\n");
-				return 0;
+		printf("111min%s hour%s day%s month%s week%s sys%s\n",min,hour,day,month,weekday,syscmd);
+		parser3=NULL;
+		//memset(parser3,0,sizeof(parser3));
+		printf("22min%s hour%s day%s month%s week%s sys%s\n",min,hour,day,month,weekday,syscmd);
+		parser3=parser;
+		printf("min%s hour%s day%s month%s week%s sys%s\n",min,hour,day,month,weekday,syscmd);
+		if(parser3[0]=='-'){//num1-num2에서 num1이 num2보다 큰경우 예외처리 
+			printf("bar...\n");
+			parser3--;
+			parser3--;
+			printf("before bar parser--:%s\n",parser3);
+			if(isdigit(parser3[1])){
+				//printf("parser2 앞으로 두칸:%s\n",parser2);
+				char *num1=(char*)malloc(2);
+				char *num2=(char*)malloc(2);
+				memset(num1,0,sizeof(num1));
+				if(isdigit(parser3[0])&&isdigit(parser3[1])){//두글자숫자
+					printf("two number\n");
+					strncpy(num1,parser3,2);
+					parser3++;
+					parser3++;
+					parser3++;
+				}
+				else if(!isdigit(parser3[0])&&isdigit(parser3[1])){//한글자숫자
+					printf("one number\n");
+					parser3++;
+					printf("parser3:%s\n",parser3);
+					strncpy(num1,parser3,1);
+					parser3++;
+					parser3++;
+				}
+				printf("num1:%s\n",num1);
+				printf("parser3 add2:%s\n",parser3);
+				memset(num2,0,sizeof(num2));
+				if(isdigit(parser3[1])){//두글자숫자
+					strncpy(num2,parser3,2);
+					parser3++;
+					parser3++;
+				}
+				else{
+					strncpy(num2,parser3,1);
+					parser3++;
+				}
+				printf("num2:%s\n",num2);
+				int numm1=atoi(num1);
+				int numm2=atoi(num2);
+				printf("int numm1:%d\n",numm1);
+				printf("int numm2:%d\n",numm2);
+				if(numm1>numm2){
+					printf("runcycle range is wrong(not 'range/number')\n");
+					gettimeofday(&end_t, NULL);
+					ssu_runtime(&begin_t, &end_t);
+					printf("\n");
+					return 0;
+				}
+				//범위/주기 일때 주기가 범위보다 큰 경우 예외처리
+				if(parser3[0]=='/'){
+					parser3++;
+					char *repeat;
+					if(isdigit(parser3[0])&&isdigit(parser3[1])){
+						repeat=(char*)malloc(2);
+						memset(repeat,0,sizeof(repeat));
+						strncpy(repeat,parser3,2);
+						printf("repeat2: %s\n",repeat);
+					}
+					else if(isdigit(parser3[0])&&!isdigit(parser3[1])){
+						repeat=(char*)malloc(1);
+						memset(repeat,0,sizeof(repeat));
+						strncpy(repeat,parser3,1);
+						printf("repeat1: %s\n",repeat);
+					}
+					int repeatt=atoi(repeat);
+					if((numm2-numm1)<repeatt){
+						printf("runcycle range is wrong(not 'repeat number is bigger than range')\n");
+						gettimeofday(&end_t, NULL);
+						ssu_runtime(&begin_t, &end_t);
+						printf("\n");
+						return 0;
+					}
+				}
 			}
 		}
-	}
-	printf("??min%s hour%s day%s month%s week%s sys%s\n",min,hour,day,month,weekday,syscmd);
+		printf("??min%s hour%s day%s month%s week%s sys%s\n",min,hour,day,month,weekday,syscmd);
 		opbuf[p]=parser[0];
 		if(opbuf[p]==slash){
 			printf("runcycle range is wrong(not 'range/number')\n");
@@ -1170,10 +1442,14 @@ int do_addOpt(char *str) {
 						}
 						printf("num1:%s\n",num1);
 						printf("parser2 /뒤로 두칸:%s\n",parser2);
-						if(isdigit(parser2[1]))//두글자숫자
+						if(isdigit(parser2[1])){//두글자숫자
 							strncpy(num2,parser2,2);
+							parser2++;
+							parser2++;
+						}
 						else{
 							strncpy(num2,parser2,1);
+							parser2++;
 						}
 						printf("num2:%s\n",num2);
 						int numm1=atoi(num1);
@@ -1186,6 +1462,32 @@ int do_addOpt(char *str) {
 							ssu_runtime(&begin_t, &end_t);
 							printf("\n");
 							return 0;
+						}
+						//범위/주기 일때 주기가 범위보다 큰 경우 예외처리
+						if(parser2[0]=='/'){
+							parser2++;
+							printf("parserrrrrrrrrrrrrrri2:%s\n",parser2);
+							char *repeat;
+							if(isdigit(parser2[0])&&isdigit(parser2[1])){
+								repeat=(char*)malloc(2);
+								memset(repeat,0,sizeof(repeat));
+								strncpy(repeat,parser2,2);
+								printf("repeat2: %s\n",repeat);
+							}
+							else if(isdigit(parser2[0])&&!isdigit(parser2[1])){
+								repeat=(char*)malloc(1);
+								memset(repeat,0,sizeof(repeat));
+								strncpy(repeat,parser2,1);
+								printf("repeat1: %s\n",repeat);
+							}
+							int repeatt=atoi(repeat);
+							if((numm2-numm1)<repeatt){
+								printf("runcycle range is wrong(not 'repeat number is bigger than range')\n");
+								gettimeofday(&end_t, NULL);
+								ssu_runtime(&begin_t, &end_t);
+								printf("\n");
+								return 0;
+							}
 						}
 					}
 				}
