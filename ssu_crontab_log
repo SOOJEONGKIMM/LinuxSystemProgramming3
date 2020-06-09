@@ -1,12 +1,21 @@
-[Tue Jun  9 21:56:02 2020
-] run */3 21 09 06 02 echo "11">1.txt
-
-[Tue Jun  9 21:59:02 2020
-] run */3 21 09 06 02 echo "11">1.txt
-
-[Tue Jun  9 22:07:02 2020] run */2 22 09 06 02 echo "22">2.txt
-
-[Tue Jun  9 22:11:14 2020] run 8-18/2 22 09 06 02 echo "33">3.txt
-
-[Tue Jun  9 22:13:14 2020] run 8-18/2 22 09 06 02 echo "33">3.txt
-
+[Wed Jun 10 05:33:30 2020] add 33-40/2 5 10 06 03 pwd
+[Wed Jun 10 05:33:54 2020] add */3 5 10 6 3 echo "timetosleep">sleep.txt
+[Wed Jun 10 05:34:32 2020] run 33-40/2 5 10 06 03 pwd
+[Wed Jun 10 05:36:02 2020] run 33-40/2 5 10 06 03 pwd
+[Wed Jun 10 05:38:02 2020] run 33-40/2 5 10 06 03 pwd
+[Wed Jun 10 05:55:47 2020] add 55-59 5 10 6 3 echo "work">work.txt
+[Wed Jun 10 05:56:28 2020] run */3 5 10 6 3 echo "timetosleep">sleep.txt
+[Wed Jun 10 05:58:13 2020] run 55-59 5 10 6 3 echo "work">work.txt
+[Wed Jun 10 06:01:47 2020] add 1-4 6 10 6 3 echo "reeee">r.txt
+[Wed Jun 10 06:01:53 2020] remove 33-40/2 5 10 06 03 pwd
+[Wed Jun 10 06:01:56 2020] remove 55-59 5 10 6 3 echo "work">work.txt
+[Wed Jun 10 06:02:09 2020] run 1-4 6 10 6 3 echo "reeee">r.txt
+[Wed Jun 10 06:04:53 2020] run 1-4 6 10 6 3 echo "reeee">r.txt
+[Wed Jun 10 06:06:06 2020] add */2 6 10 6 3 echo "sleeeep">sleep.txt
+[Wed Jun 10 06:06:09 2020] remove */3 5 10 6 3 echo "timetosleep">sleep.txt
+[Wed Jun 10 06:06:29 2020] add 6-9 6 10 6 3 echo "yes">y.txt
+[Wed Jun 10 06:06:34 2020] remove 1-4 6 10 6 3 echo "reeee">r.txt
+[Wed Jun 10 06:08:18 2020] run 6-9 6 10 6 3 echo "yes">y.txt
+[Wed Jun 10 06:08:58 2020] run 6-9 6 10 6 3 echo "yes">y.txt
+[Wed Jun 10 06:09:38 2020] run */2 6 10 6 3 echo "sleeeep">sleep.txt
+[Wed Jun 10 06:09:48 2020] run 6-9 6 10 6 3 echo "yes">y.txt

@@ -40,6 +40,11 @@ typedef struct _crondtime{
 }Node;
 Node *head;
 
+typedef struct _checking{
+	char checking[BUFFER_SIZE];
+	struct _checking *next;
+}CNode;
+CNode *chead;
 
 int min_crond[MAXTIME];
 int hour_crond[MAXTIME];
@@ -58,6 +63,7 @@ void read_cronfile();
 void check_cronfile();
 void compare_cronfile();
 void pthread_cmd();
+int check_donecmd(char *pthreadbuf);
 void* thread_handler(void *arg);
 void get_localtime(char *timestr);//crond주기 시간인지 확인위한 로컬타임 
 void get_logtime(char *str);//log기록위한 로컬타임 
@@ -74,4 +80,5 @@ void clear_tokens(char tokens[TOKEN_CNT][MINLEN]);
 void calcultime(char *timestr);
 void startdaemon();
 void list_insert(Node *newnode);
+void donelist_insert(CNode *newnode);
 void list_print();

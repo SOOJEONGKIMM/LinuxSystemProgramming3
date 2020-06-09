@@ -26,4 +26,5 @@ void ssu_crontab_prompt(void);
 int check_opt(const char *str);
 void ssu_runtime(struct timeval *begin_t, struct timeval *end_t);
 int do_addOpt(char *str);
+void get_logtime(char *str);
 int do_removeOpt(char *str);

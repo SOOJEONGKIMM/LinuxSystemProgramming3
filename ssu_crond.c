@@ -1,6 +1,5 @@
 #include "./ssu_crond.h"
 int cntnum=0;
-
 int main(void){
 	if(pthread_mutex_init(&mutex,NULL)!=0)
 		fprintf(stderr,"mutex init error\n");
@@ -125,6 +124,7 @@ void pthread_cmd(){
 	get_localtime(timestr);
 	memset(localtime,0,TIME_SIZE);
 	strcpy(localtime,timestr);
+	char checking[BUFFER_SIZE*2];
 
 	FILE *fp;
 	char *cronfile="ssu_crontab_log";
@@ -134,12 +134,18 @@ void pthread_cmd(){
 	node=head;
 	while(node){
 		for(i=0;i<node->timeidx;i++){
-			printf("l:%s",localtime);
-			printf("c:%s",node->timebuf[i]);
+			printf("l:%s\n",localtime);
+			printf("c:%s\n",node->timebuf[i]);
 			if(!strcmp(localtime,node->timebuf[i])){
 				pthread_t t_id;//thread id
 				printf("TIME IS NOW!!!!!!!!\n");
 				node->t_id=t_id;
+				memset(checking,0,BUFFER_SIZE);
+				if(check_donecmd(checking)){//완료된항목이라면 패스 
+					printf("%s is done\n",checking);
+					node=node->next;
+					continue;
+				}
 				if(pthread_create(&node->t_id,NULL,thread_handler,(void*)node)!=0)
 					fprintf(stderr,"pthread_create() error\n");
 				if((fp=fopen(cronfile,"a"))<0){
@@ -148,9 +154,14 @@ void pthread_cmd(){
 				}
 				memset(logtimestr,0,TIME_SIZE);
 				get_logtime(logtimestr);
-				fprintf(fp,"%s run %s\n",logtimestr,node->cmdline);
+				fprintf(fp,"%s run %s",logtimestr,node->cmdline);
+				sprintf(checking,"%s %s",logtimestr,node->cmdline);
+	CNode *done=(CNode*)malloc(sizeof(CNode));
+	memset(done,0,sizeof(done));
+	strcpy(done->checking,checking);
+donelist_insert(done);
 				fclose(fp);
-				sleep(60);//해당 분 동안 sleep. (로그 무한출력 방지) 
+				sleep(10);//해당 분 동안 sleep. (로그 무한출력 방지) 
 
 				pthread_detach(node->t_id);
 
@@ -159,6 +170,18 @@ void pthread_cmd(){
 		node=node->next;
 	}
 	//pthread_exit();
+}
+int check_donecmd(char *pthreadbuf){
+	CNode *done;
+	done=chead;
+	if(chead!=NULL){
+	while(done){
+		if(!strcmp(done->checking,pthreadbuf))
+			return 1;
+		done=done->next;
+	}
+	}
+	return 0;
 }
 void* thread_handler(void *arg){
 	char sys[BUFFER_SIZE];
@@ -742,6 +765,19 @@ void list_insert(Node *newnode){
 	else{
 		Node *search;
 		search=head;
+		while(search->next!=NULL)
+			search=search->next;
+		search->next=newnode;
+	}
+}
+//작업수행완료한 항목들 리스트 
+void donelist_insert(CNode *newnode){
+	newnode->next=NULL;
+	if(chead==NULL)
+		chead=newnode;
+	else{
+		CNode *search;
+		search=chead;
 		while(search->next!=NULL)
 			search=search->next;
 		search->next=newnode;

@@ -1356,6 +1356,24 @@ int do_addOpt(char *str) {
 	fprintf(fp,"%s\n",cronfilebuf);
 	fclose(fp);
 
+	//ssu_crontab_log에 파일입출력 
+	FILE *fpl;
+	char *cronlog="ssu_crontab_log";
+
+	if((fpl=fopen(cronlog,"a+"))<0){
+		fprintf(stderr,"fopen error for %s\n",cronlog);
+		exit(1);
+	}
+	char logtimestr[TIME_SIZE];//localtime_log기록을 위한 (timestr과 글자형식 다름)
+				memset(logtimestr,0,TIME_SIZE);
+				get_logtime(logtimestr);
+	char cronlogbuf[BUFFER_SIZE];
+	memset(cronlogbuf,0,BUFFER_SIZE);
+	sprintf(cronlogbuf,"%s add %s %s %s %s %s %s",logtimestr,min,hour,day,month,weekday,syscmd);
+
+	fprintf(fpl,"%s\n",cronlogbuf);
+	fclose(fpl);
+
 	//추가된 명령어까지 ssu_crontab_file 내용 표준출력 
 	int index=0;
 	char cronbuf[BUFFER_SIZE];
@@ -1381,6 +1399,23 @@ int do_addOpt(char *str) {
 	printf("\n");
 
 	return 0;
+}
+void get_logtime(char *str){
+	char timestr[TIME_SIZE];
+	char timetmp[TIME_SIZE];//asctime마지막개행파싱위해 
+	time_t ltime;
+	struct tm *logtime;
+
+	time(&ltime);
+	logtime=localtime(&ltime);
+
+	memset(timestr,0,TIME_SIZE);
+	memset(str,0,TIME_SIZE);
+	memset(timetmp,0,TIME_SIZE);
+	strncpy(timetmp,asctime(logtime),strlen(asctime(logtime))-1);//마지막개행문자파싱 
+
+	sprintf(timestr,"[%s]",timetmp);
+	strcpy(str,timestr);
 }
 int do_removeOpt(char *str) {
 	gettimeofday(&begin_t, NULL);
@@ -1419,6 +1454,7 @@ int do_removeOpt(char *str) {
 	FILE *fp;
 	char *cronfile="ssu_crontab_file";
 	int removed=0;
+	char logbuf[BUFFER_SIZE];
 
 	if(access(cronfile,F_OK)==0){
 		if((fp=fopen(cronfile,"rt+"))<0){
@@ -1439,6 +1475,8 @@ int do_removeOpt(char *str) {
 				char *tmp=(char*)malloc(len);
 				len=fread(tmp,1,len,fp);
 
+				fseek(fp,start,SEEK_SET);
+				fgets(logbuf,sizeof(logbuf),fp);
 				fseek(fp,start,SEEK_SET);
 				fwrite(tmp,1,len,fp);
 				fflush(fp);
@@ -1468,6 +1506,23 @@ int do_removeOpt(char *str) {
 		}
 		fclose(fp);
 	}
+	//ssu_crontab_log에 파일입출력 
+	FILE *fpl;
+	char *cronlog="ssu_crontab_log";
+
+	if((fpl=fopen(cronlog,"a+"))<0){
+		fprintf(stderr,"fopen error for %s\n",cronlog);
+		exit(1);
+	}
+	char logtimestr[TIME_SIZE];//localtime_log기록을 위한 (timestr과 글자형식 다름)
+				memset(logtimestr,0,TIME_SIZE);
+				get_logtime(logtimestr);
+	char cronlogbuf[BUFFER_SIZE];
+	memset(cronlogbuf,0,BUFFER_SIZE);
+	sprintf(cronlogbuf,"%s remove %s",logtimestr,logbuf);
+
+	fprintf(fpl,"%s",cronlogbuf);
+	fclose(fpl);
 
 	gettimeofday(&end_t, NULL);
 	ssu_runtime(&begin_t, &end_t);
