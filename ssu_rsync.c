@@ -430,6 +430,7 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 		//src 파일 복사(src안에서) 
 		char tmpname[PATH_SIZE];
 		memset(tmpname,0,PATH_SIZE);
+		if(!list_samefilesearch(srcd->onlysrcfname,srcd->mtime,srcd->fsize)){
 		if(S_ISREG(srcstat.st_mode)){
 			sprintf(tmpname,"%stmp",srcd->onlysrcfname);
 			if((srcfpw=fopen(tmpname,"w"))<0){
@@ -445,7 +446,9 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 			fclose(srcfpr);
 			fclose(srcfpw);
 		}
+		}
 
+		printf("here:::::::::::::path:%s\n",srcd->srcpath);
 		memset(newdst,0,PATH_SIZE);
 		sprintf(newdst,"%s/%s",dst,srcd->subpath);
 		if(S_ISDIR(srcstat.st_mode)){
@@ -466,6 +469,7 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 				utime(newdst,NULL);
 				memset(sigdst,0,PATH_SIZE);
 				strcpy(sigdst,newdst);
+				printf("copy: srcd->srcpath:%s*************\n",srcd->srcpath);
 				//tmp를 src이름으로 변경 (src안에서)
 				if(rename(tmpname,srcd->srcpath)<0){
 					fprintf(stderr,"rename error for %s to %s\n",tmpname,src);
@@ -496,6 +500,7 @@ int	rsync_copyD(char *src, char *dst,char *cmdstr,int ropt){
 				memset(sigdst,0,PATH_SIZE);
 				strcpy(sigdst,newdst);
 				//tmp를 src이름으로 변경 (src안에서)
+				printf("replace: srcd->srcpath:%s*************\n",srcd->srcpath);
 				if(rename(tmpname,srcd->srcpath)<0){
 					fprintf(stderr,"rename error for %s to %s\n",tmpname,src);
 					exit(1);
