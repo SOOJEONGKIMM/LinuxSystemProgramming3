@@ -1,5 +1,4 @@
 #include "./ssu_crond.h"
-int update=0;
 int cntnum=0;
 
 int main(void){
@@ -7,15 +6,10 @@ int main(void){
 		fprintf(stderr,"mutex init error\n");
 	read_cronfile();
 	while(1){
-		sleep(3);
-		check_cronfile();
+		sleep(30);//30초마다 add나 remove 생겼는지 다시 검사 
+		read_cronfile();
 
-		//ssu_crontab()에서 add나 remove된경우 
-		if(update==1){
-			read_cronfile();
-			update=0;
-		}
-		list_print();
+		list_print();//for debug
 		pthread_cmd();
 	}
 
@@ -29,7 +23,6 @@ void read_cronfile(){
 	FILE *fp;
 	char *cronfile="ssu_crontab_file";
 	//변동있는 경우 업데이트되므로 초기화
-	memset(readcrondfile,0,sizeof(readcrondfile));
 
 	if((fp=fopen(cronfile,"r"))<0){
 		fprintf(stderr,"fopen error for %s\n",cronfile);
@@ -43,65 +36,59 @@ void read_cronfile(){
 		if(feof(fp))
 			break;
 		printf("readfile: %s\n",cronfilebuf);
-		strcpy(readcrondfile[idx],cronfilebuf);
 		idx++;
-		printf("for comparefile:%s\n",readcrondfile[idx]);
 		read_timecmd(cronfilebuf);
 		memset(cronfilebuf,0,BUFFER_SIZE);
 	}
 	fclose(fp);
 } 
-//remove나 add로 cronfile 변동이 있는지 체크(무한반복)
-void check_cronfile(){
-	head=NULL;
-	if(pthread_mutex_init(&mutex,NULL)!=0)
-		fprintf(stderr,"mutex init error\n");
-	//ssu_crontab_file에서 주기가져옴  
-	FILE *fp;
-	char *cronfile="ssu_crontab_file";
-	//한번 읽을때마다 초기화
-	memset(checkcrondfile,0,sizeof(checkcrondfile));
+/*//remove나 add로 cronfile 변동이 있는지 체크(무한반복)
+  void check_cronfile(){
+  head=NULL;
+  if(pthread_mutex_init(&mutex,NULL)!=0)
+  fprintf(stderr,"mutex init error\n");
+//ssu_crontab_file에서 주기가져옴  
+FILE *fp;
+char *cronfile="ssu_crontab_file";
+//한번 읽을때마다 초기화
 
-	if((fp=fopen(cronfile,"r"))<0){
-		fprintf(stderr,"fopen error for %s\n",cronfile);
-		exit(1);
-	}
-	char cronfilebuf[BUFFER_SIZE];
-	memset(cronfilebuf,0,BUFFER_SIZE);
-	int idx=0;
-	while(1){
-		fgets(cronfilebuf,BUFFER_SIZE,fp);
-		if(feof(fp))
-			break;
-		printf("readfile: %s\n",cronfilebuf);
-		strcpy(checkcrondfile[idx],cronfilebuf);
-		idx++;
-		printf("for comparefile:%s\n",checkcrondfile[idx]);
-		read_timecmd(cronfilebuf);
-		memset(cronfilebuf,0,BUFFER_SIZE);
-	}
-	fclose(fp);
-	//compare_cronfile();
+if((fp=fopen(cronfile,"r"))<0){
+fprintf(stderr,"fopen error for %s\n",cronfile);
+exit(1);
 }
+char cronfilebuf[BUFFER_SIZE];
+memset(cronfilebuf,0,BUFFER_SIZE);
+int idx=0;
+while(1){
+fgets(cronfilebuf,BUFFER_SIZE,fp);
+if(feof(fp))
+break;
+printf("readfile: %s\n",cronfilebuf);
+idx++;
+read_timecmd(cronfilebuf);
+memset(cronfilebuf,0,BUFFER_SIZE);
+}
+fclose(fp);
+}*/
 //read_cronfile과 check_cronfile 비교(변동이 있는지 판별) (무한반복)
-void compare_cronfile(){
-	int origincnt=0, checkcnt=0;
-	while(checkcrondfile[checkcnt]!=NULL||readcrondfile[origincnt]!=NULL)
-		checkcnt++;origincnt++;
-	//remove된경우 
-	if(checkcnt<origincnt){
-		update=1;
-		printf("removed..\n");
-	}
-
-	//add된경우 
-	if(origincnt<checkcnt){
-		update=1;
-		printf("added...\n");
-	}
-
-
+/*void compare_cronfile(){
+  int origincnt=0, checkcnt=0;
+  while(checkcrondfile[checkcnt]!=NULL||readcrondfile[origincnt]!=NULL)
+  checkcnt++;origincnt++;
+//remove된경우 
+if(checkcnt<origincnt){
+update=1;
+printf("removed..\n");
 }
+
+//add된경우 
+if(origincnt<checkcnt){
+update=1;
+printf("added...\n");
+}
+
+
+}*/
 //현재시간 계속 가져옴(무한반복)_주기계산의 시간과 일치확인용 
 void get_localtime(char *timestr){
 	time_t timer=time(NULL);
@@ -111,9 +98,27 @@ void get_localtime(char *timestr){
 	sprintf(timestr,"[%02d-%02d-%02d-%02d-%02d]",t->tm_min,t->tm_hour,t->tm_mday,t->tm_mon+1,t->tm_wday);
 	printf("localtime: %s",timestr);
 }
+void get_logtime(char *str){
+	char timestr[TIME_SIZE];
+	char timetmp[TIME_SIZE];//asctime마지막개행파싱위해 
+	time_t ltime;
+	struct tm *logtime;
+
+	time(&ltime);
+	logtime=localtime(&ltime);
+
+	memset(timestr,0,TIME_SIZE);
+	memset(str,0,TIME_SIZE);
+	memset(timetmp,0,TIME_SIZE);
+	strncpy(timetmp,asctime(logtime),strlen(asctime(logtime))-1);//마지막개행문자파싱 
+
+	sprintf(timestr,"[%s]",timetmp);
+	strcpy(str,timestr);
+}
 //compare localtime & cmdtime 
 void pthread_cmd(){
-	char timestr[TIME_SIZE];//localtime
+	char timestr[TIME_SIZE];//localtime_crond명령어 비교를 위한
+	char logtimestr[TIME_SIZE];//localtime_log기록을 위한 (timestr과 글자형식 다름)
 	pid_t pid;
 	int i;
 	char localtime[TIME_SIZE];
@@ -141,8 +146,11 @@ void pthread_cmd(){
 					fprintf(stderr,"fopen error for %s\n",cronfile);
 					exit(1);
 				}
-				fprintf(fp,"%s run %s\n",node->timebuf[i],node->cmdline);
+				memset(logtimestr,0,TIME_SIZE);
+				get_logtime(logtimestr);
+				fprintf(fp,"%s run %s\n",logtimestr,node->cmdline);
 				fclose(fp);
+				sleep(60);//해당 분 동안 sleep. (로그 무한출력 방지) 
 
 				pthread_detach(node->t_id);
 
@@ -719,14 +727,9 @@ void startdaemon(){
 
 	//모니터링작업 
 	while(1){
-		sleep(2);
-		check_cronfile();
+		sleep(3);
+		read_cronfile();
 
-		//ssu_crontab()에서 add나 remove된경우 
-		if(update==1){
-			read_cronfile();
-			update=0;
-		}
 		list_print();
 		pthread_cmd();
 	}

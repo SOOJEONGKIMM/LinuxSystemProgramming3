@@ -12,6 +12,7 @@
 #include<errno.h>
 #include<signal.h>
 #include<sys/wait.h>
+#include<ctype.h>
 
 #define SECOND_TO_MICRO 1000000
 #define BUFFER_SIZE 1024
