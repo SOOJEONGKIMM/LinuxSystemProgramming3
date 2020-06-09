@@ -12,6 +12,7 @@
 #include<errno.h>
 #include<signal.h>
 #include<sys/wait.h>
+#include<utime.h>
 
 #define SECOND_TO_MICRO 1000000
 #define BUFFER_SIZE 1024
@@ -77,6 +78,7 @@ void list_backupinsert(bNode *newnode);
 void list_dstprint();
 void list_srcprint();
 int list_samenamesearch(char *cmpfname,int opt,char *newdst);
+int put_bNode(char *newp,char *tmpp,char *dstp);
 int list_samefilesearch(char *cmpfname,int cmpmtime, long cmpfsize);
 void parsechar(char *tmp,char *onlyfname,char *ch);
 int rsync_copyF(char *src,char *onlysrcfname,char *dst,char *cmdstr);
