@@ -1,2 +1,3 @@
-*/2 6 10 6 3 echo "sleeeep">sleep.txt
-6-9 6 10 6 3 echo "yes">y.txt
+*/2 16 10 6 3 echo "hi">hi.txt
+30,31,32-39/2 16 10 6 3 pwd
+40-50/3 16 10 6 3 echo "/3" 3.txt

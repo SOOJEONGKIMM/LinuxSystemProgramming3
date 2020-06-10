@@ -66,7 +66,7 @@ void pthread_cmd();
 int check_donecmd(char *pthreadbuf);
 void* thread_handler(void *arg);
 void get_localtime(char *timestr);//crond주기 시간인지 확인위한 로컬타임 
-void get_logtime(char *str);//log기록위한 로컬타임 
+void get_logtime(char *str,char *checkstr);
 void read_timecmd(char *str);
 int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN],int itemcnt);
 //void make_systimebuf();
